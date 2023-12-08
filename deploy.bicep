@@ -1,5 +1,15 @@
 param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
-param ResourceGroupName string = 'rg-eastus2-AVDLab-TESTREBUILD'
+param ResourceGroupName string = 'rg-eastus2-TESTREBUILD'
+param HostPoolName string = 'hp-eastus2-personal'
+param AVDResourceGroup string = 'rg-eastus2-AVDLab-Resources'
+param TemplateSpecName string = 'AVD-Personal-Replace'
+param TemplateSpecVersion string = '1.0'
+param TemplateSpecRG string = 'rg-eastus2-AVDLab-Manage'
+param KeyVaultName string = 'kv-eastus2-AVDLab'
+param KeyVaultVMAdmin string = 'AdminPassword'
+param KeyVaultDomAdmin string = 'DomainAdminPassword'
+param IfNotUsedInHours int = 3
+
 param Location string = resourceGroup().location
 param LogAnalyticsWorkspaceResourceId string = '/subscriptions/8a0ecebc-0e1d-4e8f-8cb8-8a92f49455b9/resourcegroups/rg-eastus2-avdlab-manage/providers/microsoft.operationalinsights/workspaces/law-eastus2-avdlab'
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
@@ -11,12 +21,17 @@ param _ArtifactsLocationSasToken string = ''
 @description('ISO 8601 timestamp used for the deployment names and the Automation runbook schedule.')
 param time string = utcNow()
 
-var varSubscriptionId = subscription().subscriptionId
-var varCloudEnvironment = environment().name
-
 var varJobScheduleParams = {
-  CloudEnvironment: varCloudEnvironment
-  SubscriptionId: varSubscriptionId
+  HostPoolName: HostPoolName
+  avdRG: AVDResourceGroup
+  TemplateSpecName: TemplateSpecName
+  TemplateSpecVersion: TemplateSpecVersion
+  TemplateSpecRG: TemplateSpecRG
+  KeyVaultName: KeyVaultName
+  KeyVaultVMAdmin: KeyVaultVMAdmin
+  KeyVaultDomAdmin: KeyVaultDomAdmin
+  WorkspaceId: split(LogAnalyticsWorkspaceResourceId, '/')[2]
+  IfNotUsedInHours: IfNotUsedInHours
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
 var varTimeZone = varTimeZones[Location]
