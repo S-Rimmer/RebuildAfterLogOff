@@ -14,7 +14,7 @@ param Location string = resourceGroup().location
 param LogAnalyticsWorkspaceResourceId string = '/subscriptions/8a0ecebc-0e1d-4e8f-8cb8-8a92f49455b9/resourcegroups/rg-eastus2-avdlab-manage/providers/microsoft.operationalinsights/workspaces/law-eastus2-avdlab'
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
-param _ArtifactsLocation string = 'https://raw.githubusercontent.com/JCoreMS/RebuildAfterLogOff/main/'
+param _ArtifactsLocation string = 'https://raw.githubusercontent.com/JCoreMS/RebuildAfterLogOff/main/AVD-CheckAndRebuildAtLogoff.ps1.ps1'
 @description('SaS token if needed for script location.')
 @secure()
 param _ArtifactsLocationSasToken string = ''
