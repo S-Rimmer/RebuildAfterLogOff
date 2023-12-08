@@ -4,18 +4,19 @@ param Location string = resourceGroup().location
 param LogAnalyticsWorkspaceResourceId string = '/subscriptions/8a0ecebc-0e1d-4e8f-8cb8-8a92f49455b9/resourcegroups/rg-eastus2-avdlab-manage/providers/microsoft.operationalinsights/workspaces/law-eastus2-avdlab'
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
-param _ArtifactsLocation string = 'https://raw.githubusercontent.com/Cloud-Adopter/AVD-Scripts/main/AVD-CheckAndRebuildAtLogoff/'
+param _ArtifactsLocation string = 'https://raw.githubusercontent.com/JCoreMS/RebuildAfterLogOff/main/'
 @description('SaS token if needed for script location.')
 @secure()
 param _ArtifactsLocationSasToken string = ''
-param CloudEnvironment string = 'AzureCloud'
-param SubscriptionId string = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 @description('ISO 8601 timestamp used for the deployment names and the Automation runbook schedule.')
 param time string = utcNow()
 
+var varSubscriptionId = subscription().subscriptionId
+var varCloudEnvironment = environment().name
+
 var varJobScheduleParams = {
-  CloudEnvironment: CloudEnvironment
-  SubscriptionId: SubscriptionId
+  CloudEnvironment: varCloudEnvironment
+  SubscriptionId: varSubscriptionId
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
 var varTimeZone = varTimeZones[Location]
