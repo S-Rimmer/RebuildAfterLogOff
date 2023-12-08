@@ -134,7 +134,7 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
         name: RunbookName
         description: 'AVD Rebuild at logoff'
         type: 'PowerShell'
-        uri: '${_ArtifactsLocation}${_ArtifactsLocationSasToken}${RunbookScript}'
+        uri: '${_ArtifactsLocation}${RunbookScript}${_ArtifactsLocationSasToken}'
         version: '1.0.0.0'
       }
     ] 
