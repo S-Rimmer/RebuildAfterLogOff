@@ -292,7 +292,7 @@
 			"parameters": {
 				"_ArtifactsLocation": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocation]",
 				"_ArtifactsLocationSasToken": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocationSasToken]",
-                "AutomationAcctountName": "[steps('HostPoolChoice').AutomationAcctName]",
+                "AutomationAccountName": "[steps('HostPoolChoice').AutomationAcctName]",
 				"AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
 				"HostPoolName": "[steps('HostPoolChoice').HostPools]",
                 "IfNotUsedInHours": "[steps('HostPoolChoice').ifNotUsedInHrs]",
