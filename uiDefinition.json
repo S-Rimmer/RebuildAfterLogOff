@@ -186,7 +186,7 @@
 							"visible": true
 						},
 						{
-							"name": "AVDResourceGroupId",
+							"name": "AVDResourceGroupName",
 							"type": "Microsoft.Common.DropDown",
 							"label": "Host Pool Object Resource Group",
 							"multiselect": false,
@@ -279,15 +279,15 @@
 				"_ArtifactsLocation": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocation]",
 				"_ArtifactsLocationSasToken": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocationSasToken]",
                 "AutomationAcctName": "[steps('HostPoolChoice').AutomationAcctName]",
-                "ifNotUsedInHrs": "[steps('HostPoolChoice').ifNotUsedInHrs]",
-                "LogAnalyticsWorkspaceResource": "[steps('HostPoolChoice').LogAnalyticsWorkspaceResource.id]",
-                "AVDResourceGroupId": "[steps('HostPoolChoice').AVDResourceGroupId]",
+                "IfNotUsedInHrs": "[steps('HostPoolChoice').ifNotUsedInHrs]",
+                "LogAnalyticsWorkspaceResourceId": "[steps('HostPoolChoice').LogAnalyticsWorkspaceResource.id]",
+                "AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
                 "HostPools": "[steps('HostPoolChoice').HostPools]",
                 "TempateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
                 "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]",
-                "kvDomain": "[steps('HostPoolChoice').kvDomain]",
-                "kvDomainSecretName": "[steps('HostPoolChoice').kvDomainSecretName]",
-                "kvLocalSecretName": "[steps('HostPoolChoice').kvLocalSecretName]"
+                "KeyVaultName": "[steps('HostPoolChoice').kvDomain.name]",
+                "KeyVaultDomAdmin": "[steps('HostPoolChoice').kvDomainSecretName]",
+                "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
