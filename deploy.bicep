@@ -22,7 +22,7 @@ param time string = utcNow()
 
 
 var varJobScheduleParams = {
-  CloudEnvironment: deployment().name
+  CloudEnvironment: environment().name
   HostPoolName: HostPoolName
   avdRG: AVDResourceGroup
   TemplateSpecName: split(TemplateSpecResId, '/')[8]
