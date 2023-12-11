@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.23.1.45101",
-      "templateHash": "14577444756223311418"
+      "templateHash": "10894071577826784904"
     }
   },
   "parameters": {
@@ -52,8 +52,13 @@
       "type": "string",
       "defaultValue": "eastus2"
     },
-    "LogAnalyticsWorkspaceResourceId": {
-      "type": "string"
+    "LogAnalyticsWorkspace": {
+      "type": "object",
+      "defaultValue": {
+        "Name": "",
+        "WorkspaceId": "",
+        "ResourceId": ""
+      }
     },
     "ResourceGroupName": {
       "type": "string",
@@ -93,7 +98,7 @@
       "KeyVaultName": "[parameters('KeyVaultName')]",
       "KeyVaultVMAdmin": "[parameters('KeyVaultVMAdmin')]",
       "KeyVaultDomAdmin": "[parameters('KeyVaultDomAdmin')]",
-      "WorkspaceId": "[split(parameters('LogAnalyticsWorkspaceResourceId'), '/')[2]]",
+      "WorkspaceId": "[parameters('LogAnalyticsWorkspace').WorkspaceId]",
       "IfNotUsedInHrs": "[parameters('IfNotUsedInHours')]"
     },
     "varScheduleName": "AVD-CheckAndRebuildAtLogoff",
@@ -178,7 +183,7 @@
             "value": false
           },
           "diagnosticWorkspaceId": {
-            "value": "[parameters('LogAnalyticsWorkspaceResourceId')]"
+            "value": "[parameters('LogAnalyticsWorkspace').ResourceId]"
           },
           "name": {
             "value": "[parameters('AutomationAccountName')]"

@@ -188,16 +188,24 @@
 							"visible": true
 						},
 						{
-							"name": "LogAnalyticsWorkspaceResource",
-							"type": "Microsoft.Solutions.ResourceSelector",
-							"label": "Insights Log Analytics Workspace",
-							"toolTip": "Log Analytics Workspace in which AVD Insigts and diagnostics data resides in.",
-							"resourceType": "Microsoft.OperationalInsights/workspaces",
+							"name": "logAnalyticsWSApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+								"method": "GET",
+								"path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.OperationalInsights/workspaces?api-version=2022-10-01')]"
+							}
+						},
+						{
+							"name": "logAnalyticsWS",
+							"type": "Microsoft.Common.DropDown",
+							"visible": true,
+							"label": "Log Analytics Workspace",
+							"defaultValue": "",
+							"toolTip": "Select an existing container.",
 							"constraints": {
-								"required": true
-							},
-							"infoMessages": [],
-							"visible": true
+								"required": true,
+								"allowedValues": "[map(steps('HostPoolChoice').logAnalyticsWSApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":{\"Name\":\"', item.name, '\", \"ResourceId\":\"', item.id, '\", \"WorkspaceId\":\"', item.properties.customerId, '\"}}')))]"
+							}
 						},
 						{
 							"name": "AVDResourceGroupName",
@@ -300,7 +308,7 @@
                 "KeyVaultDomAdmin": "[steps('HostPoolChoice').kvDomainSecretName]",
                 "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]",
 				"Location": "[steps('basics').resourceScope.location.name]",
-                "LogAnalyticsWorkspaceId": "[steps('HostPoolChoice').LogAnalyticsWorkspaceResource.properties.customerId]",
+                "LogAnalyticsWorkspace": "[steps('HostPoolChoice').logAnalyticsWS]",
                 "ResourceGroupName": "[steps('basics').resourceScope.resourceGroupName]",
 				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",

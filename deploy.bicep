@@ -11,7 +11,11 @@ param KeyVaultDomAdmin string = 'DomainAdminPassword'
 param KeyVaultName string = 'kv-eastus2-AVDLab'
 param KeyVaultVMAdmin string = 'AdminPassword'
 param Location string = 'eastus2'
-param LogAnalyticsWorkspaceId string
+param LogAnalyticsWorkspace object = {
+  Name: ''
+  WorkspaceId: ''
+  ResourceId: ''
+}
 param ResourceGroupName string = 'rg-eastus2-TESTREBUILD'
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
@@ -32,7 +36,7 @@ var varJobScheduleParams = {
   KeyVaultName: KeyVaultName
   KeyVaultVMAdmin: KeyVaultVMAdmin
   KeyVaultDomAdmin: KeyVaultDomAdmin
-  WorkspaceId:LogAnalyticsWorkspaceId
+  WorkspaceId:LogAnalyticsWorkspace.WorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
@@ -106,7 +110,7 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
       'JobStreams'
     ]
     enableDefaultTelemetry: false
-    diagnosticWorkspaceId: LogAnalyticsWorkspaceResourceId
+    diagnosticWorkspaceId: LogAnalyticsWorkspace.ResourceId
     name: AutomationAccountName
     jobSchedules: [
       {
