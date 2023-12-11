@@ -33,6 +33,7 @@ param(
     [string]$IfNotUsedInHrs
 )
 
+$CloudEnvironment = (Get-AzContext).Environment.Name
 Connect-AzAccount -Identity -Environment $CloudEnvironment | Out-Null
 
 ###   FUNCTION: Replace VM   ###
