@@ -108,13 +108,6 @@
 									}
 								},
 								{
-									"name": "postScriptName",
-									"type": "Microsoft.Common.TextBox",
-									"label": "Automation Account PowerShell Script Name",
-									"toolTip": "",
-									"defaultValue": "AVD-CheckAndRebuildAtLogoff.ps1"
-								},
-								{
 									"name": "_ArtifactsLocationSasToken",
 									"type": "Microsoft.Common.PasswordBox",
 									"label": {
@@ -157,6 +150,27 @@
 								"validationMessage": "The account name is invalid. It must not be empty, and must start and end with a letter or a number. The name can contain only letters, numbers and hyphens(-). The length must be from 6 to 50 characters."
 							},
 							"visible": true
+						},
+						{
+							"name": "RunbookName",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Runbook Name",
+							"subLabel": "",
+							"defaultValue": "AVD-CheckAndRebuildAtLogoff",
+							"toolTip": "Automation Account will be used to incorporate a Runbook with the Powershell script which will then run every 15 minutes. See script for additional information.",
+							"constraints": {
+								"required": true,
+								"regex": "^[a-zA-Z0-9][a-zA-Z0-9-]{4,48}[a-zA-Z0-9]$",
+								"validationMessage": "The account name is invalid. It must not be empty, and must start and end with a letter or a number. The name can contain only letters, numbers and hyphens(-). The length must be from 6 to 50 characters."
+							},
+							"visible": true
+						},
+						{
+							"name": "postScriptName",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Automation Account PowerShell Script Name",
+							"toolTip": "",
+							"defaultValue": "AVD-CheckAndRebuildAtLogoff.ps1"
 						},
 						{
 							"name": "ifNotUsedInHrs",
@@ -278,16 +292,21 @@
 			"parameters": {
 				"_ArtifactsLocation": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocation]",
 				"_ArtifactsLocationSasToken": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocationSasToken]",
-                "AutomationAcctName": "[steps('HostPoolChoice').AutomationAcctName]",
-                "IfNotUsedInHrs": "[steps('HostPoolChoice').ifNotUsedInHrs]",
-                "LogAnalyticsWorkspaceResourceId": "[steps('HostPoolChoice').LogAnalyticsWorkspaceResource.id]",
-                "AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
-                "HostPools": "[steps('HostPoolChoice').HostPools]",
-                "TempateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
-                "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]",
+                "AutomationAcctountName": "[steps('HostPoolChoice').AutomationAcctName]",
+				"AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
+				"HostPoolName": "[steps('HostPoolChoice').HostPools]",
+                "IfNotUsedInHours": "[steps('HostPoolChoice').ifNotUsedInHrs]",
                 "KeyVaultName": "[steps('HostPoolChoice').kvDomain.name]",
                 "KeyVaultDomAdmin": "[steps('HostPoolChoice').kvDomainSecretName]",
-                "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]"
+                "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]",
+                "LogAnalyticsWorkspaceResourceId": "[steps('HostPoolChoice').LogAnalyticsWorkspaceResource.id]",
+                "ResourceGroupName": "[steps('basics').resourceScope.resourceGroupName]",
+				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
+				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
+                "HostPools": "[steps('HostPoolChoice').HostPools]",
+                "TempateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
+                "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]"
+
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
