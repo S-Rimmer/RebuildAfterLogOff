@@ -104,7 +104,7 @@
 									"toolTip": "Select an existing container.",
 									"constraints": {
 										"required": true,
-										"allowedValues": "[map(steps('HostPoolChoice').CustomScriptInfo.containerApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
+										"allowedValues": "[map(steps('HostPoolChoice').CustomScriptInfo.containerApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.nextlink, '\"}')))]"
 									}
 								},
 								{
@@ -290,7 +290,7 @@
 		},
 		"outputs": {
 			"parameters": {
-				"_ArtifactsLocation": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocation]",
+				"_ArtifactsLocation": "[steps('HostPoolChoice').CustomScriptInfo.storageAcctApi.properties.primaryEndpoints.blob]",
 				"_ArtifactsLocationSasToken": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocationSasToken]",
                 "AutomationAccountName": "[steps('HostPoolChoice').AutomationAcctName]",
 				"AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
