@@ -23,7 +23,6 @@ param time string = utcNow()
 
 
 
-
 var varJobScheduleParams = {
   HostPoolName: HostPoolName
   avdRG: AVDResourceGroup
