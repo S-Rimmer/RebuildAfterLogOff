@@ -10,7 +10,7 @@ param IfNotUsedInHours int = 3
 param KeyVaultDomAdmin string = 'DomainAdminPassword'
 param KeyVaultName string = 'kv-eastus2-AVDLab'
 param KeyVaultVMAdmin string = 'AdminPassword'
-param Location string = resourceGroup().location
+param Location string = 'eastus2'
 param LogAnalyticsWorkspaceResourceId string
 param ResourceGroupName string = 'rg-eastus2-TESTREBUILD'
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
