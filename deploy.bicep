@@ -21,9 +21,8 @@ param TemplateSpecVersion string
 param time string = utcNow()
 
 
-
-
 var varJobScheduleParams = {
+  CloudEnvironment: deployment().name
   HostPoolName: HostPoolName
   avdRG: AVDResourceGroup
   TemplateSpecName: split(TemplateSpecResId, '/')[8]

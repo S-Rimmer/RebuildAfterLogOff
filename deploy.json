@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.23.1.45101",
-      "templateHash": "7835419726469754453"
+      "templateHash": "940756253815155062"
     }
   },
   "parameters": {
@@ -83,6 +83,7 @@
   },
   "variables": {
     "varJobScheduleParams": {
+      "CloudEnvironment": "[deployment().name]",
       "HostPoolName": "[parameters('HostPoolName')]",
       "avdRG": "[parameters('AVDResourceGroup')]",
       "TemplateSpecName": "[split(parameters('TemplateSpecResId'), '/')[8]]",

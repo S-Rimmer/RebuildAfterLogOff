@@ -11,8 +11,10 @@ are:
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
-	[Parameter(Mandatory)]
-	[string]$HostPoolName,
+    [Parameter(Mandatory)]
+    [string]$CloudEnvironment,	
+    [Parameter(Mandatory)]
+    [string]$HostPoolName,
     [Parameter(Mandatory)]
     [string]$avdRG,
     [Parameter(Mandatory)]
@@ -33,7 +35,6 @@ param(
     [string]$IfNotUsedInHrs
 )
 
-$CloudEnvironment = (Get-AzContext).Environment.Name
 Connect-AzAccount -Identity -Environment $CloudEnvironment | Out-Null
 
 ###   FUNCTION: Replace VM   ###
@@ -67,18 +68,18 @@ Function Replace-AvdHost {
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
     $HPToken = Get-AzWvdHostPoolRegistrationToken -HostPoolName $HostPoolName -ResourceGroupName $avdRG
-    If($HPToken.Token -eq $null){
+    If ($HPToken.Token -eq $null) {
         $ExpirationTime = $((Get-Date).ToUniversalTime().AddHours(2).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ'))
         $HPToken = New-AzWvdRegistrationInfo -ResourceGroupName $avdRG -HostPoolName $HostPoolName -ExpirationTime $ExpirationTime
-        }
+    }
     $HPTokenSecure = ConvertTo-SecureString $HPToken.Token -AsPlainText -Force
 
     # Call up template spec to rebuild
     $params = @{
-     vmInitialNumber = [int]$index;
-     vmAdministratorAccountPassword = $AdminVMPassword;
-     administratorAccountPassword = $AdminDomainPassword;
-     hostPoolToken = $HPToken.Token
+        vmInitialNumber                = [int]$index;
+        vmAdministratorAccountPassword = $AdminVMPassword;
+        administratorAccountPassword   = $AdminDomainPassword;
+        hostPoolToken                  = $HPToken.Token
     }
     Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
     New-AzResourceGroupDeployment `
@@ -91,7 +92,7 @@ Function Replace-AvdHost {
 Write-Output "Getting AVD Session Hosts where user is assigned..."
 $SessionHosts = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG | where AssignedUser -ne $null
 
-Foreach($Sessionhost in $SessionHosts){
+Foreach ($Sessionhost in $SessionHosts) {
     $assignedUser = $SessionHost.AssignedUser
     # Get index, short name and sessionhost name from hostpoolname/hostname.fqdn.com
     $hostName = ($SessionHost.Name -split '/')[1]
@@ -104,15 +105,15 @@ Foreach($Sessionhost in $SessionHosts){
 
     # Ensure user has logged in at least once in last X hours
     $Query = 'WVDConnections
-    |where TimeGenerated > ago(' + $IfNotUsedInHrs +'h)
+    |where TimeGenerated > ago(' + $IfNotUsedInHrs + 'h)
     |where SessionHostName == "' + $hostName + '"
     |where State == "Completed"
     |where UserName == "' + $assignedUser + '"
     |sort by TimeGenerated asc, CorrelationId'
     
     $PrevSessions = Invoke-AzOperationalInsightsQuery -WorkspaceId $WorkspaceId -Query $Query | select -ExpandProperty Results
-    If($PrevSessions -ne $null){$PrevSessionTime = [datetime]$PrevSessions[-1].TimeGenerated; $PrevUsed = $true}
-    else{$PrevSessionTime = "No logons found in Log Analytics in past $IfNotUsedInHrs hrs (Logging can be delayd!)"; $PrevUsed = $false}
+    If ($PrevSessions -ne $null) { $PrevSessionTime = [datetime]$PrevSessions[-1].TimeGenerated; $PrevUsed = $true }
+    else { $PrevSessionTime = "No logons found in Log Analytics in past $IfNotUsedInHrs hrs (Logging can be delayd!)"; $PrevUsed = $false }
     Write-Output "...Last Logon: $PrevSessionTime"
 
     If (($session.SessionState -ne "Active") -and ($session.SessionState -ne "Disconnected") -and ($session.SessionState -ne "Pending") -and ($PrevUsed)) {
@@ -128,11 +129,11 @@ Foreach($Sessionhost in $SessionHosts){
         Write-Output "...Getting Template Spec ID"
         $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion).Versions.Id
         Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -AdminDomainPassword $AdminDomainPassword -index $index -hostName $hostName
-        }
+    }
     Else {
         Write-Output "...No Action Required"
-        }
+    }
 }
-If($SessionHosts -eq $null){Write-Output "No Session Hosts found with assigned users."}
+If ($SessionHosts -eq $null) { Write-Output "No Session Hosts found with assigned users." }
 
 
