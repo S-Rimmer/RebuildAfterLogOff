@@ -303,8 +303,7 @@
                 "ResourceGroupName": "[steps('basics').resourceScope.resourceGroupName]",
 				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
-                "HostPools": "[steps('HostPoolChoice').HostPools]",
-                "TempateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
+                "TemplateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
                 "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]"
 
 			},
