@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.23.1.45101",
-      "templateHash": "17395498983761884566"
+      "templateHash": "14577444756223311418"
     }
   },
   "parameters": {
@@ -86,6 +86,7 @@
       "CloudEnvironment": "[environment().name]",
       "HostPoolName": "[parameters('HostPoolName')]",
       "avdRG": "[parameters('AVDResourceGroup')]",
+      "SubscriptionId": "[subscription().subscriptionId]",
       "TemplateSpecName": "[split(parameters('TemplateSpecResId'), '/')[8]]",
       "TemplateSpecVersion": "[parameters('TemplateSpecVersion')]",
       "TemplateSpecRG": "[split(parameters('TemplateSpecResId'), '/')[4]]",

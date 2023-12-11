@@ -18,6 +18,8 @@ param(
     [Parameter(Mandatory)]
     [string]$avdRG,
     [Parameter(Mandatory)]
+    [string]$SubscriptionId,
+    [Parameter(Mandatory)]
     [string]$TemplateSpecName,
     [Parameter(Mandatory)]
     [string]$TemplateSpecVersion,
@@ -35,7 +37,7 @@ param(
     [string]$IfNotUsedInHrs
 )
 
-Connect-AzAccount -Identity -Environment $CloudEnvironment | Out-Null
+Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId | Out-Null
 
 ###   FUNCTION: Replace VM   ###
 Function Replace-AvdHost {

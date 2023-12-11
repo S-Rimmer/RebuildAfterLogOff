@@ -25,6 +25,7 @@ var varJobScheduleParams = {
   CloudEnvironment: environment().name
   HostPoolName: HostPoolName
   avdRG: AVDResourceGroup
+  SubscriptionId: subscription().subscriptionId
   TemplateSpecName: split(TemplateSpecResId, '/')[8]
   TemplateSpecVersion: TemplateSpecVersion
   TemplateSpecRG: split(TemplateSpecResId, '/')[4]
