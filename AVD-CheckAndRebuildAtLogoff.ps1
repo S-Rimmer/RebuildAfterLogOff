@@ -24,7 +24,7 @@ param(
     [Parameter(Mandatory)]
     [string]$KeyVaultName,
     [Parameter(Mandatory)]
-    [string]$KeyVaultAdmin,
+    [string]$KeyVaultVMAdmin,
     [Parameter(Mandatory)]
     [string]$KeyVaultDomAdmin,
     [Parameter(Mandatory)]
