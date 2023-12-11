@@ -1,22 +1,22 @@
-param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
-param ResourceGroupName string = 'rg-eastus2-TESTREBUILD'
-param HostPoolName string = 'hp-eastus2-personal'
-param AVDResourceGroup string = 'rg-eastus2-AVDLab-Resources'
-param TemplateSpecResId string
-param TemplateSpecVersion string
-param KeyVaultName string = 'kv-eastus2-AVDLab'
-param KeyVaultVMAdmin string = 'AdminPassword'
-param KeyVaultDomAdmin string = 'DomainAdminPassword'
-param IfNotUsedInHours int = 3
-
-param Location string = resourceGroup().location
-param LogAnalyticsWorkspaceResourceId string
-param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
-param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
 param _ArtifactsLocation string = 'https://raw.githubusercontent.com/JCoreMS/RebuildAfterLogOff/main/'
 @description('SaS token if needed for script location.')
 @secure()
 param _ArtifactsLocationSasToken string = ''
+
+param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
+param AVDResourceGroup string = 'rg-eastus2-AVDLab-Resources'
+param HostPoolName string = 'hp-eastus2-personal'
+param IfNotUsedInHours int = 3
+param KeyVaultDomAdmin string = 'DomainAdminPassword'
+param KeyVaultName string = 'kv-eastus2-AVDLab'
+param KeyVaultVMAdmin string = 'AdminPassword'
+param Location string = resourceGroup().location
+param LogAnalyticsWorkspaceResourceId string
+param ResourceGroupName string = 'rg-eastus2-TESTREBUILD'
+param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
+param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
+param TemplateSpecResId string
+param TemplateSpecVersion string
 @description('ISO 8601 timestamp used for the deployment names and the Automation runbook schedule.')
 param time string = utcNow()
 

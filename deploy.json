@@ -5,63 +5,10 @@
     "_generator": {
       "name": "bicep",
       "version": "0.23.1.45101",
-      "templateHash": "14891041863502030728"
+      "templateHash": "1255539382307495792"
     }
   },
   "parameters": {
-    "AutomationAccountName": {
-      "type": "string",
-      "defaultValue": "aa-avd-check-rebuild-logoff"
-    },
-    "ResourceGroupName": {
-      "type": "string",
-      "defaultValue": "rg-eastus2-TESTREBUILD"
-    },
-    "HostPoolName": {
-      "type": "string",
-      "defaultValue": "hp-eastus2-personal"
-    },
-    "AVDResourceGroup": {
-      "type": "string",
-      "defaultValue": "rg-eastus2-AVDLab-Resources"
-    },
-    "TemplateSpecResId": {
-      "type": "string"
-    },
-    "TemplateSpecVersion": {
-      "type": "string"
-    },
-    "KeyVaultName": {
-      "type": "string",
-      "defaultValue": "kv-eastus2-AVDLab"
-    },
-    "KeyVaultVMAdmin": {
-      "type": "string",
-      "defaultValue": "AdminPassword"
-    },
-    "KeyVaultDomAdmin": {
-      "type": "string",
-      "defaultValue": "DomainAdminPassword"
-    },
-    "IfNotUsedInHours": {
-      "type": "int",
-      "defaultValue": 3
-    },
-    "Location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]"
-    },
-    "LogAnalyticsWorkspaceResourceId": {
-      "type": "string"
-    },
-    "RunbookName": {
-      "type": "string",
-      "defaultValue": "AVD-CheckAndRebuildAtLogoff"
-    },
-    "RunbookScript": {
-      "type": "string",
-      "defaultValue": "AVD-CheckAndRebuildAtLogoff.ps1"
-    },
     "_ArtifactsLocation": {
       "type": "string",
       "defaultValue": "https://raw.githubusercontent.com/JCoreMS/RebuildAfterLogOff/main/"
@@ -72,6 +19,59 @@
       "metadata": {
         "description": "SaS token if needed for script location."
       }
+    },
+    "AutomationAccountName": {
+      "type": "string",
+      "defaultValue": "aa-avd-check-rebuild-logoff"
+    },
+    "AVDResourceGroup": {
+      "type": "string",
+      "defaultValue": "rg-eastus2-AVDLab-Resources"
+    },
+    "HostPoolName": {
+      "type": "string",
+      "defaultValue": "hp-eastus2-personal"
+    },
+    "IfNotUsedInHours": {
+      "type": "int",
+      "defaultValue": 3
+    },
+    "KeyVaultDomAdmin": {
+      "type": "string",
+      "defaultValue": "DomainAdminPassword"
+    },
+    "KeyVaultName": {
+      "type": "string",
+      "defaultValue": "kv-eastus2-AVDLab"
+    },
+    "KeyVaultVMAdmin": {
+      "type": "string",
+      "defaultValue": "AdminPassword"
+    },
+    "Location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "LogAnalyticsWorkspaceResourceId": {
+      "type": "string"
+    },
+    "ResourceGroupName": {
+      "type": "string",
+      "defaultValue": "rg-eastus2-TESTREBUILD"
+    },
+    "RunbookName": {
+      "type": "string",
+      "defaultValue": "AVD-CheckAndRebuildAtLogoff"
+    },
+    "RunbookScript": {
+      "type": "string",
+      "defaultValue": "AVD-CheckAndRebuildAtLogoff.ps1"
+    },
+    "TemplateSpecResId": {
+      "type": "string"
+    },
+    "TemplateSpecVersion": {
+      "type": "string"
     },
     "time": {
       "type": "string",
