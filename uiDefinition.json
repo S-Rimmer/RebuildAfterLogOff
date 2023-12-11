@@ -300,7 +300,7 @@
                 "KeyVaultDomAdmin": "[steps('HostPoolChoice').kvDomainSecretName]",
                 "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]",
 				"Location": "[steps('basics').resourceScope.location.name]",
-                "LogAnalyticsWorkspaceResourceId": "[steps('HostPoolChoice').LogAnalyticsWorkspaceResource.id]",
+                "LogAnalyticsWorkspaceId": "[steps('HostPoolChoice').LogAnalyticsWorkspaceResource.properties.customerId]",
                 "ResourceGroupName": "[steps('basics').resourceScope.resourceGroupName]",
 				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",

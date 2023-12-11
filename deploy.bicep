@@ -11,7 +11,7 @@ param KeyVaultDomAdmin string = 'DomainAdminPassword'
 param KeyVaultName string = 'kv-eastus2-AVDLab'
 param KeyVaultVMAdmin string = 'AdminPassword'
 param Location string = 'eastus2'
-param LogAnalyticsWorkspaceResourceId string
+param LogAnalyticsWorkspaceId string
 param ResourceGroupName string = 'rg-eastus2-TESTREBUILD'
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
@@ -32,7 +32,7 @@ var varJobScheduleParams = {
   KeyVaultName: KeyVaultName
   KeyVaultVMAdmin: KeyVaultVMAdmin
   KeyVaultDomAdmin: KeyVaultDomAdmin
-  WorkspaceId: split(LogAnalyticsWorkspaceResourceId, '/')[2]
+  WorkspaceId:LogAnalyticsWorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
