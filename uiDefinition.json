@@ -309,7 +309,7 @@
                 "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]",
 				"Location": "[steps('basics').resourceScope.location.name]",
                 "LogAnalyticsWorkspace": "[steps('HostPoolChoice').logAnalyticsWS]",
-                "ResourceGroupName": "[steps('basics').resourceScope.resourceGroupName]",
+                "ResourceGroupName": "[steps('basics').resourceScope.resourceGroup.name]",
 				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
                 "TemplateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
