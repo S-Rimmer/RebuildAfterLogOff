@@ -26,11 +26,11 @@
     },
     "AVDResourceGroup": {
       "type": "string",
-      "defaultValue": "rg-eastus2-AVDLab-Resources"
+      "defaultValue": ""
     },
     "HostPoolName": {
       "type": "string",
-      "defaultValue": "hp-eastus2-personal"
+      "defaultValue": ""
     },
     "IfNotUsedInHours": {
       "type": "int",
@@ -62,7 +62,7 @@
     },
     "ResourceGroupName": {
       "type": "string",
-      "defaultValue": "rg-eastus2-TESTREBUILD"
+      "defaultValue": ""
     },
     "RunbookName": {
       "type": "string",
