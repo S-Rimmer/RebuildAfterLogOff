@@ -4,19 +4,19 @@ param _ArtifactsLocation string = 'https://raw.githubusercontent.com/JCoreMS/Reb
 param _ArtifactsLocationSasToken string = ''
 
 param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
-param AVDResourceGroup string = 'rg-eastus2-AVDLab-Resources'
-param HostPoolName string = 'hp-eastus2-personal'
+param AVDResourceGroup
+param HostPoolName
 param IfNotUsedInHours int = 3
-param KeyVaultDomAdmin string = 'DomainAdminPassword'
-param KeyVaultName string = 'kv-eastus2-AVDLab'
-param KeyVaultVMAdmin string = 'AdminPassword'
+param KeyVaultDomAdmin 
+param KeyVaultName 
+param KeyVaultVMAdmin
 param Location string = 'eastus2'
 param LogAnalyticsWorkspace object = {
   Name: ''
   WorkspaceId: ''
   ResourceId: ''
 }
-param ResourceGroupName string = 'rg-eastus2-TESTREBUILD'
+param ResourceGroupName
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
 param TemplateSpecResId string
