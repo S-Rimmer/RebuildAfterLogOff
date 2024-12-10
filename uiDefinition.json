@@ -350,43 +350,5 @@
 			"location": "[steps('basics').resourceScope.location.name]",
 			"subscriptionId": "[steps('basics').resourceScope.subscription.id]"
 		}
-	},
-	"parameters": {
-		"imageGalleryName": {
-			"type": "string",
-			"metadata": {
-				"description": "The name of the Azure Image Gallery.",
-				"displayName": "Image Gallery Name"
-			},
-			"allowedValues": [
-				"Gallery1",
-				"Gallery2",
-				"Gallery3"
-			]
-		},
-		"imageName": {
-			"type": "string",
-			"metadata": {
-				"description": "The name of the image in the Azure Image Gallery.",
-				"displayName": "Image Name"
-			},
-			"allowedValues": [
-				"Image1",
-				"Image2",
-				"Image3"
-			]
-		},
-		"imageVersion": {
-			"type": "string",
-			"metadata": {
-				"description": "The version of the image in the Azure Image Gallery.",
-				"displayName": "Image Version"
-			},
-			"allowedValues": [
-				"1.0.0",
-				"1.1.0",
-				"1.2.0"
-			]
-		}
 	}
 }
