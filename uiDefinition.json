@@ -312,9 +312,9 @@
                 "ResourceGroupName": "[steps('basics').resourceScope.resourceGroup.name]",
 				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
-                "TemplateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
-                "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]"
-
+    			"imageGalleryName":  "[steps('HostPoolChoice').imageGalleryName]",
+				"imageName": "[steps('HostPoolChoice').imageName]",
+				"imageVersion": "[steps('HostPoolChoice').imageVersion]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
