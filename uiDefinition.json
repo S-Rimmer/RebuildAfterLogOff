@@ -42,6 +42,17 @@
 								"method": "GET",
 								"path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/microsoft.operationalinsights/workspaces?api-version=2021-06-01')]"
 							}
+						},
+						{
+							"name": "imageGalleryApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+								"method": "GET",
+								"path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/galleries?api-version=2021-03-01')]"
+							},
+							"outputs": {
+								"value": "[steps('HostPoolChoice').imageGalleryApi.value]"
+							}
 						}
 					]
 				},
