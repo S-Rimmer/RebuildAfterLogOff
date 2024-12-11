@@ -280,10 +280,17 @@
 							"visible": true
 						},
 						{
+							"name": "imageGalleryApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+							  "method": "GET",
+							  "path": "[concat('/subscriptions/', steps('basics').subscriptionId, '/providers/Microsoft.Compute/galleries?api-version=2021-03-01')]"
+							}
+						  },
+						  {
 							"name": "imageGalleryName",
 							"type": "Microsoft.Common.DropDown",
 							"label": "Image Gallery Name",
-							"resourceType": "Microsoft.Compute/galleries",
 							"toolTip": "Select the Azure Image Gallery.",
 							"constraints": {
 							  "required": true,
@@ -335,6 +342,7 @@
 							},
 							"visible": true
 						  }
+
 					]
 				}
 			]
