@@ -20,6 +20,15 @@
 							}
 						},
 						{
+							"name": "subscriptionId",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Subscription ID",
+							"defaultValue": "[steps('basics').resourceScope.subscription.id]",
+							"visible": false
+						  }
+						]
+					  },
+						{
 							"name": "HostPoolsApi",
 							"type": "Microsoft.Solutions.ArmApiControl",
 							"request": {
