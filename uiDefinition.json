@@ -42,17 +42,6 @@
 								"method": "GET",
 								"path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/microsoft.operationalinsights/workspaces?api-version=2021-06-01')]"
 							}
-						},
-						{
-							"name": "imageGalleryApi",
-							"type": "Microsoft.Solutions.ArmApiControl",
-							"request": {
-								"method": "GET",
-								"path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/galleries?api-version=2021-03-01)]"
-							},
-							"outputs": {
-								"value": "[steps('HostPoolChoice').imageGalleryApi.value]"
-							}
 						}
 					]
 				},
@@ -280,10 +269,20 @@
 							"visible": true
 						},
 						{
+							"name": "imageGalleryApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+								"method": "GET",
+								"path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/galleries?api-version=2021-03-01')]"
+							},
+							"outputs": {
+								"value": "[steps('HostPoolChoice').imageGalleryApi.value]"
+							}
+						},
+						{
 							"name": "imageGalleryName",
 							"type": "Microsoft.Common.DropDown",
 							"label": "Image Gallery Name",
-							"resourceType": "Microsoft.Compute/galleries",
 							"toolTip": "Select the Azure Image Gallery.",
 							"constraints": {
 							  "required": true,
@@ -300,7 +299,10 @@
 							},
 							"dependsOn": [
 							  "imageGalleryName"
-							]
+							],
+							"outputs": {
+								"value": "[steps('HostPoolChoice').imageNameApi.value]"
+							  }
 						  },
 						  {
 							"name": "imageName",
@@ -322,7 +324,10 @@
 							},
 							"dependsOn": [
 							  "imageName"
-							]
+							],
+							"outputs": {
+								"value": "[steps('HostPoolChoice').imageVersionApi.value]"
+							  }
 						  },
 						  {
 							"name": "imageVersion",
@@ -357,7 +362,10 @@
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
     			"imageGalleryName":  "[steps('HostPoolChoice').imageGalleryName]",
 				"imageName": "[steps('HostPoolChoice').imageName]",
-				"imageVersion": "[steps('HostPoolChoice').imageVersion]"
+				"imageVersion": "[steps('HostPoolChoice').imageVersion]",
+				"SubscriptionId": "[subscription().subscriptionId]",
+				"WorkspaceId": "[steps('HostPoolChoice').logAnalyticsWS.WorkspaceId]",
+				"IfNotUsedInHrs": "[steps('HostPoolChoice').ifNotUsedInHrs]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
