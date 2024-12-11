@@ -179,7 +179,7 @@
 							"max": 24,
 							"label": "After use Wait to Rebuild",
 							"subLabel": "Hrs",
-							"defaultValue": 3,
+							"defaultValue": 1,
 							"showStepMarkers": false,
 							"toolTip": "Pick the number of hours to wait to rebuild the VM. Minimum of 1 hour up to 24 hours.",
 							"constraints": {
@@ -270,34 +270,59 @@
 						},
 						{
 							"name": "imageGalleryName",
-							"type": "Microsoft.Common.TextBox",
+							"type": "Microsoft.Common.DropDown",
 							"label": "Image Gallery Name",
-							"toolTip": "The name of the Azure Image Gallery.",
+							"toolTip": "Select the Azure Image Gallery.",
 							"constraints": {
-								"required": true
+							  "required": true,
+							  "allowedValues": "[map(steps('HostPoolChoice').imageGalleryApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
 							},
 							"visible": true
-						},
-						{
+						  },
+						  {
+							"name": "imageNameApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+							  "method": "GET",
+							  "path": "[concat(steps('HostPoolChoice').imageGalleryName, '/images?api-version=2021-03-01')]"
+							},
+							"dependsOn": [
+							  "imageGalleryName"
+							]
+						  },
+						  {
 							"name": "imageName",
-							"type": "Microsoft.Common.TextBox",
+							"type": "Microsoft.Common.DropDown",
 							"label": "Image Name",
-							"toolTip": "The name of the image in the Azure Image Gallery.",
+							"toolTip": "Select the image in the Azure Image Gallery.",
 							"constraints": {
-								"required": true
+							  "required": true,
+							  "allowedValues": "[map(steps('HostPoolChoice').imageNameApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
 							},
 							"visible": true
-						},
-						{
+						  },
+						  {
+							"name": "imageVersionApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+							  "method": "GET",
+							  "path": "[concat(steps('HostPoolChoice').imageName, '/versions?api-version=2021-03-01')]"
+							},
+							"dependsOn": [
+							  "imageName"
+							]
+						  },
+						  {
 							"name": "imageVersion",
-							"type": "Microsoft.Common.TextBox",
+							"type": "Microsoft.Common.DropDown",
 							"label": "Image Version",
-							"toolTip": "The version of the image in the Azure Image Gallery.",
+							"toolTip": "Select the version of the image in the Azure Image Gallery.",
 							"constraints": {
-								"required": true
+							  "required": true,
+							  "allowedValues": "[map(steps('HostPoolChoice').imageVersionApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
 							},
 							"visible": true
-						}
+						  }
 					]
 				}
 			]
