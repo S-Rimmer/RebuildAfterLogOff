@@ -283,6 +283,7 @@
 							"name": "imageGalleryName",
 							"type": "Microsoft.Common.DropDown",
 							"label": "Image Gallery Name",
+							"resourceType": "Microsoft.Compute/galleries",
 							"toolTip": "Select the Azure Image Gallery.",
 							"constraints": {
 							  "required": true,
