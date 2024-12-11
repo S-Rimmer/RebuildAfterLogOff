@@ -242,30 +242,6 @@
 							"visible": true
 						},
 						{
-							"name": "TemplateSpec",
-							"type": "Microsoft.Solutions.ResourceSelector",
-							"label": "Template Spec for Rebuild",
-							"toolTip": "Select the Template Spec that includes all the ARM template to add a VM to the Host Pool.",
-							"resourceType": "Microsoft.Resources/templateSpecs",
-							"constraints": {
-								"required": true
-							},
-							"infoMessages": [],
-							"visible": true
-						},
-                        {
-                            "name": "TemplateSpecVersion",
-							"type": "Microsoft.Common.TextBox",
-							"label": "Template Spec Version",
-							"subLabel": "",
-							"defaultValue": "",
-							"toolTip": "Automation Account will be used to incorporate a Runbook with the Powershell script which will then run every 15 minutes. See script for additional information.",
-							"constraints": {
-								"required": true
-							},
-							"visible": true
-						},
-						{
 							"name": "kvDomain",
 							"type": "Microsoft.Solutions.ResourceSelector",
 							"label": "Select Keyvault",
