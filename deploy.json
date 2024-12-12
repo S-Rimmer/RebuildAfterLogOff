@@ -44,6 +44,10 @@
       "type": "string",
       "defaultValue": "AdminPassword"
     },
+    "KeyVaultDomAdmin": {
+      "type": "string",
+      "defaultValue": "DomainAdminPassword"
+    },
     "Location": {
       "type": "string",
       "defaultValue": "eastus2"
