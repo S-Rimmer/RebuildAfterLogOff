@@ -483,7 +483,8 @@
 				"ComputeGalleryName": "[steps('HostPoolChoice').computeGallerySelection.name]",
 				"ComputeGallerySubId": "[first(skip(split(steps('HostPoolChoice').computeGallerySelection.id, '/'),2))]",
 				"ComputeGalleryRG": "[first(skip(split(steps('HostPoolChoice').computeGallerySelection.id, '/'),4))]",
-				"ComputeGalleryImage": "[steps('HostPoolChoice').imageSelection]"
+				"ComputeGalleryImage": "[steps('HostPoolChoice').imageSelection]",
+				"avdOsImage": "[steps('HostPoolChoice').sessionHostsOsImage]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
