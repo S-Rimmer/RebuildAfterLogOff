@@ -481,9 +481,6 @@
 		},
 		"outputs": {
 			"parameters": {
-				"imageGalleryName": "[steps('HostPoolChoice').imageGalleryName]",
-				"imageName": "[steps('HostPoolChoice').imageName]",
-				"imageVersion": "[steps('HostPoolChoice').imageVersion]",
 				"_ArtifactsLocation": "[steps('HostPoolChoice').CustomScriptInfo.storageAcctApi.properties.primaryEndpoints.blob]",
 				"_ArtifactsLocationSasToken": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocationSasToken]",
 				"AutomationAccountName": "[steps('HostPoolChoice').AutomationAcctName]",
