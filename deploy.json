@@ -89,6 +89,7 @@
     },
     "avdOsImage": {
       "type": "string",
+      "defaultValue": "Windows 11",
       "metadata": {
         "description": "The OS version for the AVD host."
       }
@@ -106,8 +107,9 @@
       "WorkspaceId": "[parameters('LogAnalyticsWorkspace').WorkspaceId]",
       "IfNotUsedInHrs": "[parameters('IfNotUsedInHours')]",
       "imageGalleryName": "[parameters('ComputeGalleryName')]",
-      "imageName": "[parameters('ComputeGalleryImage]",
-      "imageVersion": "[parameters('ComputeGalleryImage]"
+      "imageName": "[parameters('ComputeGalleryImage')]",
+      "imageVersion": "[parameters('ComputeGalleryImage')]",
+      "avdOsImage": "[parameters('avdOsImage')]"
     },
     "varScheduleName": "AVD-CheckAndRebuildAtLogoff",
     "varTimeZone": "[variables('varTimeZones')[parameters('Location')]]",
