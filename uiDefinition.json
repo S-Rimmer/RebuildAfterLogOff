@@ -50,15 +50,6 @@
 								"method": "GET",
 								"path": "[concat('/subscriptions/', steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/galleries?api-version=2021-03-01')]"
 							}
-						},
-						{
-							"name": "DebugImageGalleryApi",
-							"type": "Microsoft.Common.InfoBox",
-							"visible": true,
-							"options": {
-								"text": "[steps('imageGalleryApi').value]",
-								"style": "Info"
-							}
 						}
 					]
 				},
