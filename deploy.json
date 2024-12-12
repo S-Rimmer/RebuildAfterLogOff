@@ -113,6 +113,14 @@
     "diagnosticEventHubName": {
       "type": "string",
       "defaultValue": ""
+    },
+    "diagnosticSettingsName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "name": {
+      "type": "string",
+      "defaultValue": ""
     }
   },
   "variables": {
@@ -649,7 +657,7 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', parameters('name'))]"
               ],
-              "condition": "[or(or(or(not(empty(parameters('diagnosticStorageAccountId'))), not(empty(parameters('diagnosticWorkspaceId')))), not(empty(parameters('diagnosticEventHubAuthorizationRuleId')))), not(empty(parameters('diagnosticEventHubName'))))]"
+              "condition": "[or(or(or(not(empty(parameters('diagnosticStorageAccountId'))), not(empty(parameters('diagnosticWorkspaceId')))), not(empty(parameters('diagnosticEventHubAuthorizationRuleId')))), not(empty(parameters('diagnosticEventHubName')))]"
             },
             {
               "copy": {
