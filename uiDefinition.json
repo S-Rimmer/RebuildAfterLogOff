@@ -44,22 +44,6 @@
 							}
 						},
 						{
-							"name": "debugSubscription",
-							"type": "Microsoft.Common.TextBox",
-							"defaultValue": "[steps('basics').resourceScope.subscription.id]",
-							"label": "Debug Subscription ID",
-							"readonly": true,
-							"visible": true
-						},
-						{
-							"name": "debugImageGallery",
-							"type": "Microsoft.Common.TextBox",
-							"defaultValue": "[steps('imageGalleryApi').value]",
-							"label": "Debug Image Gallery API Response",
-							"readonly": true,
-							"visible": true
-						},
-						{
 							"name": "imageGalleryApi",
 							"type": "Microsoft.Solutions.ArmApiControl",
 							"request": {
