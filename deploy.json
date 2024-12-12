@@ -100,6 +100,19 @@
         "description": "The OS version for the AVD host."
       }
     },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS1_v2",
+      "metadata": {
+        "description": "Size of the virtual machine."
+      }
+    },
+    "vmName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
     "diagnosticStorageAccountId": {
       "type": "string",
       "defaultValue": ""
