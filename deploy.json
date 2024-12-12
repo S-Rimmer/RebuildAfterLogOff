@@ -90,7 +90,7 @@
     "avdOsImage": {
       "type": "string",
       "metadata": {
-        "description": "The version of the image in the Azure Image Gallery."
+        "description": "The OS version for the AVD host."
       }
     }
   },
