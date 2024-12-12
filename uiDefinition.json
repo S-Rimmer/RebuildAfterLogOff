@@ -435,7 +435,23 @@
 							  "allowedValues": "[map(steps('HostPoolChoice').imageVersionApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
 							},
 							"visible": true
-						  }
+						},
+						{
+							"name": "debugSubscription",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Debug Subscription ID",
+							"readonly": true,
+							"visible": true,
+							"defaultValue": "[steps('basics').resourceScope.subscription.id]"
+						},
+						{
+							"name": "debugImageGalleryApiResponse",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Debug Image Gallery API Response",
+							"readonly": true,
+							"visible": true,
+							"defaultValue": "[steps('imageGalleryApi').value]"
+						}
 					]
 				}
 			]
