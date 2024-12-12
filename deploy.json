@@ -81,12 +81,14 @@
     },
     "ComputeGalleryName": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
         "description": "The name of the Azure Image Gallery."
       }
     },
     "ComputeGalleryImage": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
         "description": "The name of the image in the Azure Image Gallery."
       }
