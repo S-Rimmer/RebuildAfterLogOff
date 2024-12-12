@@ -42,6 +42,12 @@
 								"method": "GET",
 								"path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/microsoft.operationalinsights/workspaces?api-version=2021-06-01')]"
 							}
+						},
+						{
+							"name": "vmName",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Virtual Machine Name",
+							"defaultValue": ""
 						}
 					]
 				},
@@ -136,6 +142,12 @@
 								}
 							],
 							"visible": "[equals(steps('HostPoolChoice').optionCustomScriptLocation, true)]"
+						},
+						{
+							"name": "vmName",
+							"type": "Microsoft.Common.TextBox",
+							"label": "Virtual Machine Name",
+							"defaultValue": ""
 						},
 						{
 							"name": "AutomationAcctName",
@@ -484,7 +496,8 @@
 				"ComputeGallerySubId": "[first(skip(split(steps('HostPoolChoice').computeGallerySelection.id, '/'),2))]",
 				"ComputeGalleryRG": "[first(skip(split(steps('HostPoolChoice').computeGallerySelection.id, '/'),4))]",
 				"ComputeGalleryImage": "[steps('HostPoolChoice').imageSelection]",
-				"avdOsImage": "[steps('HostPoolChoice').sessionHostsOsImage]"
+				"avdOsImage": "[steps('HostPoolChoice').sessionHostsOsImage]",
+				"vmName": "[steps('basics').vmName]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
