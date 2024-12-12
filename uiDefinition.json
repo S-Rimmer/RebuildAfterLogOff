@@ -363,7 +363,7 @@
 							"toolTip": "Select the Azure Image Gallery.",
 							"constraints": {
 								"required": true,
-								"allowedValues": "[map(steps('imageGalleryApi').value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\", \"description\":\"', item.properties.description, '\"}')))]"
+								"allowedValues": "[steps('imageGalleryApi').galleryItems]"
 							},
 							"visible": true
 						},
@@ -385,7 +385,7 @@
 							"toolTip": "Select the image in the Azure Image Gallery.",
 							"constraints": {
 								"required": true,
-								"allowedValues": "[map(steps('HostPoolChoice').imageNameApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\", \"description\":\"', item.properties.description, '\"}')))]"
+								"allowedValues": "[map(steps('imageNameApi').value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\", \"description\":\"', item.properties.description, '\"}')))]"
 							},
 							"visible": true
 						},
@@ -407,7 +407,7 @@
 							"toolTip": "Select the version of the image in the Azure Image Gallery.",
 							"constraints": {
 								"required": true,
-								"allowedValues": "[map(steps('HostPoolChoice').imageVersionApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
+								"allowedValues": "[map(steps('imageVersionApi').value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
 							},
 							"visible": true
 						}
