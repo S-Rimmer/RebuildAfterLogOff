@@ -97,6 +97,22 @@
       "metadata": {
         "description": "The OS version for the AVD host."
       }
+    },
+    "diagnosticStorageAccountId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "diagnosticWorkspaceId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "diagnosticEventHubAuthorizationRuleId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "diagnosticEventHubName": {
+      "type": "string",
+      "defaultValue": ""
     }
   },
   "variables": {
