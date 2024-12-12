@@ -75,19 +75,19 @@
         "description": "ISO 8601 timestamp used for the deployment names and the Automation runbook schedule."
       }
     },
-    "imageGalleryName": {
+    "ComputeGalleryName": {
       "type": "string",
       "metadata": {
         "description": "The name of the Azure Image Gallery."
       }
     },
-    "imageName": {
+    "ComputeGalleryImage": {
       "type": "string",
       "metadata": {
         "description": "The name of the image in the Azure Image Gallery."
       }
     },
-    "imageVersion": {
+    "avdOsImage": {
       "type": "string",
       "metadata": {
         "description": "The version of the image in the Azure Image Gallery."
