@@ -105,9 +105,9 @@
       "KeyVaultDomAdmin": "[parameters('KeyVaultDomAdmin')]",
       "WorkspaceId": "[parameters('LogAnalyticsWorkspace').WorkspaceId]",
       "IfNotUsedInHrs": "[parameters('IfNotUsedInHours')]",
-      "imageGalleryName": "[parameters('imageGalleryName')]",
-      "imageName": "[parameters('imageName')]",
-      "imageVersion": "[parameters('imageVersion')]"
+      "imageGalleryName": "[parameters('ComputeGalleryName')]",
+      "imageName": "[parameters('ComputeGalleryImage]",
+      "imageVersion": "[parameters('ComputeGalleryImage]"
     },
     "varScheduleName": "AVD-CheckAndRebuildAtLogoff",
     "varTimeZone": "[variables('varTimeZones')[parameters('Location')]]",
