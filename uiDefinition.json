@@ -64,7 +64,10 @@
 							"type": "Microsoft.Solutions.ArmApiControl",
 							"request": {
 								"method": "GET",
-								"path": "[concat('/subscriptions/', steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/galleries?api-version=2021-03-01')]"
+								"path": "[concat('/subscriptions/', steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/galleries?api-version=2021-03-01')]",
+								"transforms": {
+									"list": "value|[*].{label:name, value:id, description:properties.description}"
+								}
 							},
 							"outputs": {
 								"value": "[steps('basics').imageGalleryApi.value]"
@@ -382,7 +385,7 @@
 							"toolTip": "Select the Azure Image Gallery.",
 							"constraints": {
 								"required": true,
-								"allowedValues": "[steps('imageGalleryApi').galleryItems]"
+								"allowedValues": "[steps('basics').imageGalleryApi.transformed.list]"
 							},
 							"visible": true
 						},
@@ -390,49 +393,49 @@
 							"name": "imageNameApi",
 							"type": "Microsoft.Solutions.ArmApiControl",
 							"request": {
-							  "method": "GET",
-							  "path": "[concat(steps('HostPoolChoice').imageGalleryName, '/images?api-version=2021-03-01')]"
+								"method": "GET",
+								"path": "[concat(steps('HostPoolChoice').imageGalleryName, '/images?api-version=2021-03-01')]"
 							},
 							"dependsOn": [
-							  "imageGalleryName"
+								"imageGalleryName"
 							],
 							"outputs": {
-							  "value": "[steps('HostPoolChoice').imageNameApi.value]"
+								"value": "[steps('HostPoolChoice').imageNameApi.value]"
 							}
-						  },
-						  {
+						},
+						{
 							"name": "imageName",
 							"type": "Microsoft.Common.DropDown",
 							"label": "Image Name",
 							"toolTip": "Select the image in the Azure Image Gallery.",
 							"constraints": {
-							  "required": true,
-							  "allowedValues": "[map(steps('HostPoolChoice').imageNameApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
+								"required": true,
+								"allowedValues": "[map(steps('HostPoolChoice').imageNameApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
 							},
 							"visible": true
-						  },
-						  {
+						},
+						{
 							"name": "imageVersionApi",
 							"type": "Microsoft.Solutions.ArmApiControl",
 							"request": {
-							  "method": "GET",
-							  "path": "[concat(steps('HostPoolChoice').imageName, '/versions?api-version=2021-03-01')]"
+								"method": "GET",
+								"path": "[concat(steps('HostPoolChoice').imageName, '/versions?api-version=2021-03-01')]"
 							},
 							"dependsOn": [
-							  "imageName"
+								"imageName"
 							],
 							"outputs": {
-							  "value": "[steps('HostPoolChoice').imageVersionApi.value]"
+								"value": "[steps('HostPoolChoice').imageVersionApi.value]"
 							}
-						  },
-						  {
+						},
+						{
 							"name": "imageVersion",
 							"type": "Microsoft.Common.DropDown",
 							"label": "Image Version",
 							"toolTip": "Select the version of the image in the Azure Image Gallery.",
 							"constraints": {
-							  "required": true,
-							  "allowedValues": "[map(steps('HostPoolChoice').imageVersionApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
+								"required": true,
+								"allowedValues": "[map(steps('HostPoolChoice').imageVersionApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
 							},
 							"visible": true
 						},
@@ -451,6 +454,119 @@
 							"readonly": true,
 							"visible": true,
 							"defaultValue": "[steps('imageGalleryApi').value]"
+						},
+						{
+							"name": "ImageSource",
+							"type": "Microsoft.Common.DropDown",
+							"label": "Image Source",
+							"defaultValue": "Microsoft Gallery",
+							"toolTip": "Select whether to use a Microsoft Gallery Image or your own Compute Gallery Image.",
+							"constraints": {
+								"required": false,
+								"allowedValues": [
+									{
+										"label": "Microsoft Gallery",
+										"value": "MSGallery"
+									},
+									{
+										"label": "Compute Gallery",
+										"value": "ComputeGallery"
+									}
+								]
+							},
+							"visible": true
+						},
+						{
+							"name": "computeGallerySelection",
+							"type": "Microsoft.Solutions.ResourceSelector",
+							"visible": "[if(equals(steps('HostPoolChoice').ImageSource, 'ComputeGallery'), true, false)]",
+							"label": "Azure Compute Gallery Selection",
+							"resourceType": "Microsoft.Compute/galleries",
+							"constraints": {
+								"required": "[if(equals(steps('HostPoolChoice').ImageSource, 'ComputeGallery'), true, false)]"
+							}
+						},
+						{
+							"name": "computeGalleryApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+								"method": "GET",
+								"path": "[concat(steps('HostPoolChoice').computeGallerySelection.id,'/images?api-version=2021-10-01')]"
+							}
+						},
+						{
+							"name": "imageSelection",
+							"type": "Microsoft.Common.DropDown",
+							"visible": "[if(equals(steps('HostPoolChoice').ImageSource, 'ComputeGallery'), true, false)]",
+							"label": "Gallery Image",
+							"defaultValue": "",
+							"toolTip": "Select an existing Image Definition to use as a source.",
+							"constraints": {
+								"allowedValues": "[map(steps('HostPoolChoice').computeGalleryApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]",
+								"required": "[if(equals(steps('HostPoolChoice').ImageSource, 'ComputeGallery'), true, false)]"
+							}
+						},
+						{
+							"name": "computeGalleryImageApi",
+							"type": "Microsoft.Solutions.ArmApiControl",
+							"request": {
+								"method": "GET",
+								"path": "[concat(steps('HostPoolChoice').computeGallerySelection.id,'/images/versions?api-version=2021-10-01')]"
+							}
+						},
+						{
+							"name": "sessionHostsOsImage",
+							"type": "Microsoft.Common.DropDown",
+							"visible": "[if(equals(steps('HostPoolChoice').ImageSource, 'MSGallery'), true, false)]",
+							"label": "OS version",
+							"filter": true,
+							"defaultValue": "Windows 11 23H2 - Office 365 (Gen2)",
+							"toolTip": "Select the operating system version of the session hosts.",
+							"constraints": {
+								"required": "[if(equals(steps('HostPoolChoice').ImageSource, 'MSGallery'), true, false)]",
+								"allowedValues": [
+									{
+										"label": "Windows 10 21H2",
+										"value": "win10_21h2"
+									},
+									{
+										"label": "Windows 10 21H2 - Office 365",
+										"value": "win10_21h2_office"
+									},
+									{
+										"label": "Windows 10 22H2 (Gen2)",
+										"value": "win10_22h2_g2"
+									},
+									{
+										"label": "Windows 10 22H2 - Office 365 (Gen2)",
+										"value": "win10_22h2_office_g2"
+									},
+									{
+										"label": "Windows 11",
+										"value": "win11_21h2"
+									},
+									{
+										"label": "Windows 11 - Office 365",
+										"value": "win11_21h2_office"
+									},
+									{
+										"label": "Windows 11 22H2 (Gen2)",
+										"value": "win11_22h2"
+									},
+									{
+										"label": "Windows 11 22H2 - Office 365 (Gen2)",
+										"value": "win11_22h2_office"
+									},
+									{
+										"label": "Windows 11 23H2 (Gen2)",
+										"value": "win11_23h2"
+									},
+									{
+										"label": "Windows 11 23H2 - Office 365 (Gen2)",
+										"value": "win11_23h2_office"
+									}
+								]
+							}
 						}
 					]
 				}
@@ -473,7 +589,11 @@
 				"LogAnalyticsWorkspace": "[steps('HostPoolChoice').logAnalyticsWS]",
 				"ResourceGroupName": "[steps('basics').resourceScope.resourceGroup.name]",
 				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
-				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]"
+				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
+				"ComputeGalleryName": "[steps('HostPoolChoice').computeGallerySelection.name]",
+				"ComputeGallerySubId": "[first(skip(split(steps('HostPoolChoice').computeGallerySelection.id, '/'),2))]",
+				"ComputeGalleryRG": "[first(skip(split(steps('HostPoolChoice').computeGallerySelection.id, '/'),4))]",
+				"ComputeGalleryImage": "[steps('HostPoolChoice').imageSelection]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
