@@ -20,11 +20,10 @@ param(
     [Parameter(Mandatory)]
     [string]$SubscriptionId,
     [Parameter(Mandatory)]
-    [string]$TemplateSpecName,
-    [Parameter(Mandatory)]
-    [string]$TemplateSpecVersion,
-    [Parameter(Mandatory)]
-    [string]$TemplateSpecRG,
+    [Parameter(Mandatory=$true)]
+    [string]$GalleryImageId,  # Add this parameter to accept the gallery image ID
+    [Parameter(Mandatory=$true)]
+    [string]$GalleryImageVersion, 
     [Parameter(Mandatory)]
     [string]$KeyVaultName,
     [Parameter(Mandatory)]
@@ -47,6 +46,8 @@ Function Replace-AvdHost {
         $HostPoolName,
         $avdRG,
         $TemplateSpecId,
+        $galleryImageVersion,
+        $galleryImageId,
         $VM,
         $hostName,
         $index
@@ -83,11 +84,11 @@ Function Replace-AvdHost {
         administratorAccountPassword   = $AdminDomainPassword;
         hostPoolToken                  = $HPToken.Token
     }
-    Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
+    Write-Output "...Submitting Image to rebuild VM ($GalleryimageID $galleryImageVersion)"
     New-AzResourceGroupDeployment `
         -ResourceGroupName $avdRG `
-        -TemplateSpecId $TemplateSpecId `
-        -TemplateParameterObject $params | Out-Null
+        -GalleryImageId $galleryImageId`
+        -GalleryImageVersion $galleryImageVersion | Out-Null
 }
 
 ####   MAIN SCRIPT   ####
@@ -127,10 +128,11 @@ Foreach ($Sessionhost in $SessionHosts) {
         $AdminDomainPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultDomAdmin -AsPlainText
         $AdminVMPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultVMAdmin -AsPlainText
         Write-Output "...Getting VM information"
-        $VM = Get-azVM -Name $hostShortName
-        Write-Output "...Getting Template Spec ID"
-        $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion).Versions.Id
-        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -AdminDomainPassword $AdminDomainPassword -index $index -hostName $hostName
+        $vm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $sessionHost.Name
+        $vm.StorageProfile.ImageReference.Id = $GalleryImageId
+        $vm.StorageProfile.ImageReference.Version = $GalleryImageVersion
+        Write-Output "...Getting Gallery ID and Version"
+        Replace-AvdHost -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -HostPoolName $HostPoolName -GalleryImageId $GalleryImageId -GalleryImageVersion $GalleryImageVersion
     }
     Else {
         Write-Output "...No Action Required"
