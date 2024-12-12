@@ -93,6 +93,12 @@
         "description": "The name of the image in the Azure Image Gallery."
       }
     },
+    "vmName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the virtual machine."
+      }
+    },
     "avdOsImage": {
       "type": "string",
       "defaultValue": "Windows 11",
