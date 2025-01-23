@@ -34,7 +34,7 @@
     },
     "IfNotUsedInHours": {
       "type": "int",
-      "defaultValue": 3
+      "defaultValue": 1
     },
     "KeyVaultName": {
       "type": "string",
