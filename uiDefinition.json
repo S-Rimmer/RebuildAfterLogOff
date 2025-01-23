@@ -305,7 +305,6 @@
 				"HostPoolName": "[steps('HostPoolChoice').HostPools]",
                 "IfNotUsedInHours": "[steps('HostPoolChoice').ifNotUsedInHrs]",
                 "KeyVaultName": "[steps('HostPoolChoice').kvDomain.name]",
-                "KeyVaultDomAdmin": "[steps('HostPoolChoice').kvDomainSecretName]",
                 "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]",
 				"Location": "[steps('basics').resourceScope.location.name]",
                 "LogAnalyticsWorkspace": "[steps('HostPoolChoice').logAnalyticsWS]",

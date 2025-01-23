@@ -43,7 +43,6 @@ Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $Subscr
 Function Replace-AvdHost {
     param (
         $AdminVMPassword,
-        $AdminDomainPassword,
         $HostPoolName,
         $avdRG,
         $TemplateSpecId,
@@ -80,7 +79,6 @@ Function Replace-AvdHost {
     $params = @{
         vmInitialNumber                = [int]$index;
         vmAdministratorAccountPassword = $AdminVMPassword;
-        administratorAccountPassword   = $AdminDomainPassword;
         hostPoolToken                  = $HPToken.Token
     }
     Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
@@ -124,13 +122,13 @@ Foreach ($Sessionhost in $SessionHosts) {
 
         # Remove VM including host pool registration
         Write-Output "...Getting Admin Passwords from Keyvault"
-        $AdminDomainPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultDomAdmin -AsPlainText
+    
         $AdminVMPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultVMAdmin -AsPlainText
         Write-Output "...Getting VM information"
         $VM = Get-azVM -Name $hostShortName
         Write-Output "...Getting Template Spec ID"
         $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion).Versions.Id
-        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -AdminDomainPassword $AdminDomainPassword -index $index -hostName $hostName
+        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName
     }
     Else {
         Write-Output "...No Action Required"

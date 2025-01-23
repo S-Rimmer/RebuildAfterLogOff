@@ -36,10 +36,6 @@
       "type": "int",
       "defaultValue": 3
     },
-    "KeyVaultDomAdmin": {
-      "type": "string",
-      "defaultValue": "DomainAdminPassword"
-    },
     "KeyVaultName": {
       "type": "string",
       "defaultValue": "kv-eastus2-AVDLab"
@@ -97,7 +93,6 @@
       "TemplateSpecRG": "[split(parameters('TemplateSpecResId'), '/')[4]]",
       "KeyVaultName": "[parameters('KeyVaultName')]",
       "KeyVaultVMAdmin": "[parameters('KeyVaultVMAdmin')]",
-      "KeyVaultDomAdmin": "[parameters('KeyVaultDomAdmin')]",
       "WorkspaceId": "[parameters('LogAnalyticsWorkspace').WorkspaceId]",
       "IfNotUsedInHrs": "[parameters('IfNotUsedInHours')]"
     },
