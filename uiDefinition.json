@@ -266,17 +266,6 @@
 							"visible": true
 						},
 						{
-							"name": "kvDomain",
-							"type": "Microsoft.Solutions.ResourceSelector",
-							"label": "Select Keyvault",
-							"resourceType": "Microsoft.KeyVault/vaults",
-							"toolTip": "Select Keyvault which contains the secrets for the Domain Credentials.",
-							"constraints": {
-								"required": true
-							},
-							"visible": true
-						},
-						{
 							"name": "kvLocalSecretName",
 							"type": "Microsoft.Common.TextBox",
 							"defaultValue": "LocalAdminPassword",
@@ -296,7 +285,6 @@
 				"AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
 				"HostPoolName": "[steps('HostPoolChoice').HostPools]",
                 "IfNotUsedInHours": "[steps('HostPoolChoice').ifNotUsedInHrs]",
-                "KeyVaultName": "[steps('HostPoolChoice').kvDomain.name]",
                 "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]",
 				"Location": "[steps('basics').resourceScope.location.name]",
                 "LogAnalyticsWorkspace": "[steps('HostPoolChoice').logAnalyticsWS]",
