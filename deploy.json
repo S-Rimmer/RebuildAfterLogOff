@@ -11,7 +11,7 @@
   "parameters": {
     "_ArtifactsLocation": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/JCoreMS/RebuildAfterLogOff/main/"
+      "defaultValue": "https://raw.githubusercontent.com/S-Rimmer/RebuildAfterLogOff/main/"
     },
     "_ArtifactsLocationSasToken": {
       "type": "securestring",
