@@ -30,8 +30,6 @@ param(
     [Parameter(Mandatory)]
     [string]$KeyVaultVMAdmin,
     [Parameter(Mandatory)]
-    [string]$KeyVaultDomAdmin,
-    [Parameter(Mandatory)]
     [string]$WorkspaceId,
     [Parameter(Mandatory)]
     [string]$IfNotUsedInHrs

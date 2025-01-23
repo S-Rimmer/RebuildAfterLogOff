@@ -7,7 +7,6 @@ param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
 param AVDResourceGroup
 param HostPoolName
 param IfNotUsedInHours int = 3
-param KeyVaultDomAdmin 
 param KeyVaultName 
 param KeyVaultVMAdmin
 param Location string = 'eastus2'
@@ -35,7 +34,6 @@ var varJobScheduleParams = {
   TemplateSpecRG: split(TemplateSpecResId, '/')[4]
   KeyVaultName: KeyVaultName
   KeyVaultVMAdmin: KeyVaultVMAdmin
-  KeyVaultDomAdmin: KeyVaultDomAdmin
   WorkspaceId:LogAnalyticsWorkspace.WorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
 }
