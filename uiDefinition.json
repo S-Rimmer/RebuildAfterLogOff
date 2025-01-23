@@ -179,7 +179,7 @@
 							"max": 24,
 							"label": "After use Wait to Rebuild",
 							"subLabel": "Hrs",
-							"defaultValue": 3,
+							"defaultValue": 1,
 							"showStepMarkers": false,
 							"toolTip": "Pick the number of hours to wait to rebuild the VM. Minimum of 1 hour up to 24 hours.",
 							"constraints": {
