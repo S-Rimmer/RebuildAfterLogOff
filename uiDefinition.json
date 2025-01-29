@@ -179,7 +179,7 @@
 							"max": 24,
 							"label": "After use Wait to Rebuild",
 							"subLabel": "Hrs",
-							"defaultValue": 1,
+							"defaultValue": 3,
 							"showStepMarkers": false,
 							"toolTip": "Pick the number of hours to wait to rebuild the VM. Minimum of 1 hour up to 24 hours.",
 							"constraints": {
@@ -266,6 +266,17 @@
 							"visible": true
 						},
 						{
+							"name": "kvDomain",
+							"type": "Microsoft.Solutions.ResourceSelector",
+							"label": "Select Keyvault",
+							"resourceType": "Microsoft.KeyVault/vaults",
+							"toolTip": "Select Keyvault which contains the secrets for the Domain Credentials.",
+							"constraints": {
+								"required": true
+							},
+							"visible": true
+						},
+						{
 							"name": "kvLocalSecretName",
 							"type": "Microsoft.Common.TextBox",
 							"defaultValue": "LocalAdminPassword",
@@ -285,6 +296,7 @@
 				"AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
 				"HostPoolName": "[steps('HostPoolChoice').HostPools]",
                 "IfNotUsedInHours": "[steps('HostPoolChoice').ifNotUsedInHrs]",
+                "KeyVaultName": "[steps('HostPoolChoice').kvDomain.name]",
                 "KeyVaultVMAdmin": "[steps('HostPoolChoice').kvLocalSecretName]",
 				"Location": "[steps('basics').resourceScope.location.name]",
                 "LogAnalyticsWorkspace": "[steps('HostPoolChoice').logAnalyticsWS]",

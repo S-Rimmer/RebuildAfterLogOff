@@ -120,7 +120,6 @@ Foreach ($Sessionhost in $SessionHosts) {
 
         # Remove VM including host pool registration
         Write-Output "...Getting Admin Passwords from Keyvault"
-    
         $AdminVMPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultVMAdmin -AsPlainText
         Write-Output "...Getting VM information"
         $VM = Get-azVM -Name $hostShortName
@@ -133,5 +132,3 @@ Foreach ($Sessionhost in $SessionHosts) {
     }
 }
 If ($SessionHosts -eq $null) { Write-Output "No Session Hosts found with assigned users." }
-
-
