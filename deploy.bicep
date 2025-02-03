@@ -180,4 +180,3 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
     systemAssignedIdentity: true
   }
 }
-
