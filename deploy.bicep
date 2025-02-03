@@ -36,6 +36,7 @@ var varJobScheduleParams = {
   KeyVaultVMAdmin: KeyVaultVMAdmin
   WorkspaceId:LogAnalyticsWorkspace.WorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
+  imageId: imageId 
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
 var varTimeZone = varTimeZones[Location]
