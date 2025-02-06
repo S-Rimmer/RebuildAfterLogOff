@@ -32,25 +32,7 @@ param(
     [Parameter(Mandatory)]
     [string]$WorkspaceId,
     [Parameter(Mandatory)]
-    [string]$IfNotUsedInHrs,
-    [Parameter(Mandatory)]
-    [string]$imageId,
-    [Parameter(Mandatory)]
-    [string]$virtualMachineName,
-    [Parameter(Mandatory)]
-    [string]$location,
-    [Parameter(Mandatory)]
-    [string]$vmSize,
-    [Parameter(Mandatory)]
-    [string]$osDiskType,
-    [Parameter(Mandatory)]
-    [string]$virtualMachineComputerName,
-    [Parameter(Mandatory)]
-    [string]$adminUsername,
-    [Parameter(Mandatory)]
-    [string]$adminPassword,
-    [Parameter(Mandatory)]
-    [string]$networkInterfaceName
+    [string]$IfNotUsedInHrs
 )
 
 Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId | Out-Null
@@ -70,7 +52,7 @@ Function Replace-AvdHost {
     # Remove from AVD Host Pool and actual VM (Including Disk and NIC)
     Write-Output "...Removing Session Host from AVD"
     Remove-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG -Name $hostName -Force
-    Write-Output "...Stopping VM"
+    Write-Output "...Stoping VM"
     Stop-AzVM -ResourceGroupName $VM.ResourceGroupName -Name $VM.Name -Force | Out-Null
     $VMNicId = $VM.NetworkProfile.NetworkInterfaces.id
     $VMDiskId = $VM.StorageProfile.OsDisk.ManagedDisk.Id
@@ -80,6 +62,7 @@ Function Replace-AvdHost {
     Remove-AzResource -ResourceId $VMNicId -Force | Out-Null
     Write-Output "...Removing OS Disk"
     Remove-AzResource -ResourceId $VMDiskId -Force | Out-Null
+    
     
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
@@ -92,18 +75,9 @@ Function Replace-AvdHost {
 
     # Call up template spec to rebuild
     $params = @{
-        vmInitialNumber                = [int]$index
-        vmAdministratorAccountPassword = $AdminVMPassword
+        vmInitialNumber                = [int]$index;
+        vmAdministratorAccountPassword = $AdminVMPassword;
         hostPoolToken                  = $HPToken.Token
-        virtualMachineName             = $hostShortName
-        location                       = $VM.Location
-        vmSize                         = $VM.HardwareProfile.VmSize
-        imageId                        = $imageId
-        osDiskType                     = $VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType
-        virtualMachineComputerName     = $hostShortName
-        adminUsername                  = $VM.OsProfile.AdminUsername
-        adminPassword                  = $AdminVMPassword
-        networkInterfaceName           = $VM.NetworkProfile.NetworkInterfaces[0].Id.Split('/')[-1]
     }
     Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
     New-AzResourceGroupDeployment `

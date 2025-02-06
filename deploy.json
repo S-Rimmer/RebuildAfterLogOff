@@ -9,6 +9,17 @@
     }
   },
   "parameters": {
+    "_ArtifactsLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/S-Rimmer/RebuildAfterLogOff/main/"
+    },
+    "_ArtifactsLocationSasToken": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "SaS token if needed for script location."
+      }
+    },
     "AutomationAccountName": {
       "type": "string",
       "defaultValue": "aa-avd-check-rebuild-logoff"
@@ -73,76 +84,6 @@
       "metadata": {
         "description": "ISO 8601 timestamp used for the deployment names and the Automation runbook schedule."
       }
-    },
-    "virtualMachineName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the virtual machine."
-      }
-    },
-    "location": {
-      "type": "string",
-      "metadata": {
-        "description": "Location for the virtual machine."
-      }
-    },
-    "vmSize": {
-      "type": "string",
-      "metadata": {
-        "description": "Size of the virtual machine."
-      }
-    },
-    "imageId": {
-      "type": "string",
-      "metadata": {
-        "description": "ID of the image from the Azure Compute Gallery."
-      }
-    },
-    "osDiskType": {
-      "type": "string",
-      "metadata": {
-        "description": "Type of the OS disk."
-      }
-    },
-    "virtualMachineComputerName": {
-      "type": "string",
-      "metadata": {
-        "description": "Computer name for the virtual machine."
-      }
-    },
-    "adminUsername": {
-      "type": "string",
-      "metadata": {
-        "description": "Admin username for the virtual machine."
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Admin password for the virtual machine."
-      }
-    },
-    "networkInterfaceName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the network interface."
-      }
-    },
-    "diagnosticStorageAccountId": {
-      "type": "string",
-      "defaultValue": ""
-    },
-    "diagnosticWorkspaceId": {
-      "type": "string",
-      "defaultValue": ""
-    },
-    "diagnosticEventHubAuthorizationRuleId": {
-      "type": "string",
-      "defaultValue": ""
-    },
-    "diagnosticEventHubName": {
-      "type": "string",
-      "defaultValue": ""
     }
   },
   "variables": {
@@ -157,16 +98,7 @@
       "KeyVaultName": "[parameters('KeyVaultName')]",
       "KeyVaultVMAdmin": "[parameters('KeyVaultVMAdmin')]",
       "WorkspaceId": "[parameters('LogAnalyticsWorkspace').WorkspaceId]",
-      "IfNotUsedInHrs": "[parameters('IfNotUsedInHours')]",
-      "imageId": "[parameters('imageId')]",
-      "virtualMachineName": "[parameters('virtualMachineName')]",
-      "location": "[parameters('location')]",
-      "vmSize": "[parameters('vmSize')]",
-      "osDiskType": "[parameters('osDiskType')]",
-      "virtualMachineComputerName": "[parameters('virtualMachineComputerName')]",
-      "adminUsername": "[parameters('adminUsername')]",
-      "adminPassword": "[parameters('adminPassword')]",
-      "networkInterfaceName": "[parameters('networkInterfaceName')]"
+      "IfNotUsedInHrs": "[parameters('IfNotUsedInHours')]"
     },
     "varScheduleName": "AVD-CheckAndRebuildAtLogoff",
     "varTimeZone": "[variables('varTimeZones')[parameters('Location')]]",
@@ -671,7 +603,7 @@
               ]
             },
             {
-              "condition": "[or(not(empty(parameters('diagnosticStorageAccountId'))), not(empty(parameters('diagnosticWorkspaceId'))), not(empty(parameters('diagnosticEventHubAuthorizationRuleId'))), not(empty(parameters('diagnosticEventHubName')))]",
+              "condition": "[or(or(or(not(empty(parameters('diagnosticStorageAccountId'))), not(empty(parameters('diagnosticWorkspaceId')))), not(empty(parameters('diagnosticEventHubAuthorizationRuleId')))), not(empty(parameters('diagnosticEventHubName'))))]",
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
               "scope": "[format('Microsoft.Automation/automationAccounts/{0}', parameters('name'))]",

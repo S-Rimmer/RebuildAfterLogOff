@@ -1,7 +1,8 @@
-param _ArtifactsLocation string = 'hhttps://github.com/S-Rimmer/RebuildAfterLogOff/main/'
+param _ArtifactsLocation string = 'https://raw.githubusercontent.com/S-Rimmer/RebuildAfterLogOff/main/'
 @description('SaS token if needed for script location.')
 @secure()
 param _ArtifactsLocationSasToken string = ''
+
 param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
 param AVDResourceGroup
 param HostPoolName
@@ -17,17 +18,8 @@ param LogAnalyticsWorkspace object = {
 param ResourceGroupName
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
-param virtualMachineComputerName string
-param adminUsername string
-param adminPassword string
-param networkInterfaceName string
 param TemplateSpecResId string
 param TemplateSpecVersion string
-param virtualMachineName string
-param location string
-param vmSize string
-param imageId string
-param osDiskType string
 @description('ISO 8601 timestamp used for the deployment names and the Automation runbook schedule.')
 param time string = utcNow()
 
@@ -44,15 +36,6 @@ var varJobScheduleParams = {
   KeyVaultVMAdmin: KeyVaultVMAdmin
   WorkspaceId:LogAnalyticsWorkspace.WorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
-  imageId: imageId
-  virtualMachineName: virtualMachineName
-  location: location
-  vmSize: vmSize
-  osDiskType: osDiskType
-  virtualMachineComputerName: virtualMachineComputerName
-  adminUsername: adminUsername
-  adminPassword: adminPassword
-  networkInterfaceName: networkInterfaceName
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
 var varTimeZone = varTimeZones[Location]
@@ -196,17 +179,4 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
     skuName: 'Free'
     systemAssignedIdentity: true
   }
-}
-
-resource automationAccount_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (or(not(empty(diagnosticStorageAccountId)), not(empty(diagnosticWorkspaceId)), not(empty(diagnosticEventHubAuthorizationRuleId)), not(empty(diagnosticEventHubName)))) {
-  name: !empty(diagnosticSettingsName) ? diagnosticSettingsName : '${name}-diagnosticSettings'
-  properties: {
-    storageAccountId: !empty(diagnosticStorageAccountId) ? diagnosticStorageAccountId : null
-    workspaceId: !empty(diagnosticWorkspaceId) ? diagnosticWorkspaceId : null
-    eventHubAuthorizationRuleId: !empty(diagnosticEventHubAuthorizationRuleId) ? diagnosticEventHubAuthorizationRuleId : null
-    eventHubName: !empty(diagnosticEventHubName) ? diagnosticEventHubName : null
-    metrics: diagnosticsMetrics
-    logs: diagnosticsLogs
-  }
-  scope: automationAccount
 }
