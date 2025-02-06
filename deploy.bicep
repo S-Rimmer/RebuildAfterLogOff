@@ -1,4 +1,4 @@
-param _ArtifactsLocation string = 'https://raw.githubusercontent.com/S-Rimmer/RebuildAfterLogOff/main/'
+param _ArtifactsLocation string = 'hhttps://github.com/S-Rimmer/RebuildAfterLogOff/main/'
 @description('SaS token if needed for script location.')
 @secure()
 param _ArtifactsLocationSasToken string = ''
