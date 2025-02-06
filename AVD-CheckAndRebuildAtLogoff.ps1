@@ -34,7 +34,7 @@ param(
     [Parameter(Mandatory)]
     [string]$IfNotUsedInHrs,
     [Parameter(Mandatory)]
-    [string]$imageId,
+    [string]$imageId, # Add the new parameter here
     [Parameter(Mandatory)]
     [string]$virtualMachineName,
     [Parameter(Mandatory)]
@@ -81,7 +81,6 @@ Function Replace-AvdHost {
     Write-Output "...Removing OS Disk"
     Remove-AzResource -ResourceId $VMDiskId -Force | Out-Null
     
-    
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
     $HPToken = Get-AzWvdHostPoolRegistrationToken -HostPoolName $HostPoolName -ResourceGroupName $avdRG
@@ -99,7 +98,7 @@ Function Replace-AvdHost {
         virtualMachineName             = $hostShortName
         location                       = $VM.Location
         vmSize                         = $VM.HardwareProfile.VmSize
-        imageId                        = $imageId // Use the new parameter here
+        imageId                        = $imageId # Use the new parameter here
         osDiskType                     = $VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType
         virtualMachineComputerName     = $hostShortName
         adminUsername                  = $VM.OsProfile.AdminUsername
