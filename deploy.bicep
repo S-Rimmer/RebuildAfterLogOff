@@ -197,3 +197,16 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
     systemAssignedIdentity: true
   }
 }
+
+resource automationAccount_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (or(not(empty(diagnosticStorageAccountId)), not(empty(diagnosticWorkspaceId)), not(empty(diagnosticEventHubAuthorizationRuleId)), not(empty(diagnosticEventHubName)))) {
+  name: !empty(diagnosticSettingsName) ? diagnosticSettingsName : '${name}-diagnosticSettings'
+  properties: {
+    storageAccountId: !empty(diagnosticStorageAccountId) ? diagnosticStorageAccountId : null
+    workspaceId: !empty(diagnosticWorkspaceId) ? diagnosticWorkspaceId : null
+    eventHubAuthorizationRuleId: !empty(diagnosticEventHubAuthorizationRuleId) ? diagnosticEventHubAuthorizationRuleId : null
+    eventHubName: !empty(diagnosticEventHubName) ? diagnosticEventHubName : null
+    metrics: diagnosticsMetrics
+    logs: diagnosticsLogs
+  }
+  scope: automationAccount
+}
