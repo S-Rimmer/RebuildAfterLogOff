@@ -34,7 +34,7 @@ param(
     [Parameter(Mandatory)]
     [string]$IfNotUsedInHrs,
     [Parameter(Mandatory)]
-    [string]$imageId, # Add the new parameter here
+    [string]$imageId,
     [Parameter(Mandatory)]
     [string]$virtualMachineName,
     [Parameter(Mandatory)]
@@ -70,7 +70,7 @@ Function Replace-AvdHost {
     # Remove from AVD Host Pool and actual VM (Including Disk and NIC)
     Write-Output "...Removing Session Host from AVD"
     Remove-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG -Name $hostName -Force
-    Write-Output "...Stoping VM"
+    Write-Output "...Stopping VM"
     Stop-AzVM -ResourceGroupName $VM.ResourceGroupName -Name $VM.Name -Force | Out-Null
     $VMNicId = $VM.NetworkProfile.NetworkInterfaces.id
     $VMDiskId = $VM.StorageProfile.OsDisk.ManagedDisk.Id
@@ -98,7 +98,7 @@ Function Replace-AvdHost {
         virtualMachineName             = $hostShortName
         location                       = $VM.Location
         vmSize                         = $VM.HardwareProfile.VmSize
-        imageId                        = $imageId # Use the new parameter here
+        imageId                        = $imageId
         osDiskType                     = $VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType
         virtualMachineComputerName     = $hostShortName
         adminUsername                  = $VM.OsProfile.AdminUsername
