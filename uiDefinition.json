@@ -42,93 +42,6 @@
 					"label": "Host Pool",
 					"elements": [
 						{
-							"name": "optionCustomScriptLocation",
-							"type": "Microsoft.Common.CheckBox",
-							"label": "Using Custom Script Location",
-							"toolTip": "Selecting this will provide additional fields for inputting a Blob Storage URL and Sas Token. Currently the deployment uses the Internet facing GitHub site. This is common when deploying in Air Gapped Clouds.",
-							"constraints": {
-								"required": false,
-								"validationMessage": "Selecting this will provide additional fields for inputting a Blob Storage URL and Sas Token. Currently the deployment uses the Internet facing GitHub site."
-							}
-						},
-						{
-							"name": "CustomScriptInfo",
-							"type": "Microsoft.Common.Section",
-							"label": "Custom Script Information",
-							"elements": [
-								{
-									"name": "storageSelection",
-									"type": "Microsoft.Solutions.ResourceSelector",
-									"label": "Storage Account with Host Pool VM Rebuild Script",
-									"resourceType": "Microsoft.Storage/storageAccounts",
-									"toolTip": "Select a storage account",
-									"scope": {
-										"subscriptionId": "[steps('basics').resourceScope.subscription.subscriptionId]",
-										"location": "[steps('basics').resourceScope.location.name]"
-									},
-									"constraints": {
-										"required": true
-									},
-									"visible": true
-								},
-								{
-									"name": "storageAcctApi",
-									"type": "Microsoft.Solutions.ArmApiControl",
-									"request": {
-										"method": "GET",
-										"path": "[concat(steps('HostPoolChoice').CustomScriptInfo.storageSelection.id, '?api-version=2022-05-01')]"
-									}
-								},
-								{
-									"name": "containerApi",
-									"type": "Microsoft.Solutions.ArmApiControl",
-									"request": {
-										"method": "GET",
-										"path": "[concat(steps('HostPoolChoice').CustomScriptInfo.storageSelection.id, '/blobServices/default/containers?api-version=2023-01-01')]"
-									}
-								},
-								{
-									"name": "containerResourceId",
-									"type": "Microsoft.Common.DropDown",
-									"visible": true,
-									"label": "Container",
-									"defaultValue": "",
-									"toolTip": "Select an existing container.",
-									"constraints": {
-										"required": true,
-										"allowedValues": "[map(steps('HostPoolChoice').CustomScriptInfo.containerApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.nextlink, '\"}')))]"
-									}
-								},
-								{
-									"name": "_ArtifactsLocationSasToken",
-									"type": "Microsoft.Common.PasswordBox",
-									"label": {
-										"password": "Artifacts Location Sas Token",
-										"confirmPassword": "Confirm Sas Token"
-									},
-									"toolTip": "SaS token if needed for script location. Be sure to include the ?sp= prefix.",
-									"constraints": {
-										"required": false,
-										"regex": "^? ( [a-z]{2,3}=[\\w%-]+&)*sig=[\\w%-]+$",
-										"validationMessage": "Ensure the string starts with ?sp="
-									},
-									"options": {
-										"hideConfirmation": true
-									},
-									"visible": true
-								},
-								{
-									"name": "infoMessageCustomScriptsLoc",
-									"type": "Microsoft.Common.InfoBox",
-									"visible": true,
-									"options": {
-										"text": "Be sure that the script is publicly accessible and the storage is not configured for private link, etc. and copied to the Selected Storage Location. IF using a Sas Token be sure to include the ?sp= prefix!",
-										"style": "Info"
-									}
-								}
-							]
-						},
-						{
 							"name": "AutomationAcctName",
 							"type": "Microsoft.Common.TextBox",
 							"label": "Automation Account Name",
@@ -281,8 +194,6 @@
 		},
 		"outputs": {
 			"parameters": {
-				"_ArtifactsLocation": "[steps('HostPoolChoice').CustomScriptInfo.storageAcctApi.properties.primaryEndpoints.blob]",
-				"_ArtifactsLocationSasToken": "[steps('HostPoolChoice').CustomScriptInfo._ArtifactsLocationSasToken]",
                 "AutomationAccountName": "[steps('HostPoolChoice').AutomationAcctName]",
 				"AVDResourceGroup": "[steps('HostPoolChoice').AVDResourceGroupName]",
 				"HostPoolName": "[steps('HostPoolChoice').HostPools]",

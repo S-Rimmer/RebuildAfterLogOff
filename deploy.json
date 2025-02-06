@@ -9,17 +9,6 @@
     }
   },
   "parameters": {
-    "_ArtifactsLocation": {
-      "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/S-Rimmer/RebuildAfterLogOff/main/"
-    },
-    "_ArtifactsLocationSasToken": {
-      "type": "securestring",
-      "defaultValue": "",
-      "metadata": {
-        "description": "SaS token if needed for script location."
-      }
-    },
     "AutomationAccountName": {
       "type": "string",
       "defaultValue": "aa-avd-check-rebuild-logoff"
