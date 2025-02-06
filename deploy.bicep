@@ -2,7 +2,6 @@ param _ArtifactsLocation string = 'https://raw.githubusercontent.com/S-Rimmer/Re
 @description('SaS token if needed for script location.')
 @secure()
 param _ArtifactsLocationSasToken string = ''
-
 param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
 param AVDResourceGroup
 param HostPoolName
@@ -18,6 +17,10 @@ param LogAnalyticsWorkspace object = {
 param ResourceGroupName
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
+param virtualMachineComputerName string
+param adminUsername string
+param adminPassword string
+param networkInterfaceName string
 param TemplateSpecResId string
 param TemplateSpecVersion string
 @description('ISO 8601 timestamp used for the deployment names and the Automation runbook schedule.')
@@ -36,6 +39,15 @@ var varJobScheduleParams = {
   KeyVaultVMAdmin: KeyVaultVMAdmin
   WorkspaceId:LogAnalyticsWorkspace.WorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
+    imageId: imageId // Add the new parameter here
+  virtualMachineName: virtualMachineName
+  location: location
+  vmSize: vmSize
+  osDiskType: osDiskType
+  virtualMachineComputerName: virtualMachineComputerName
+  adminUsername: adminUsername
+  adminPassword: adminPassword
+  networkInterfaceName: networkInterfaceName
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
 var varTimeZone = varTimeZones[Location]

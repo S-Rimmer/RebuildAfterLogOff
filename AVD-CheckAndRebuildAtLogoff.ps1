@@ -32,7 +32,25 @@ param(
     [Parameter(Mandatory)]
     [string]$WorkspaceId,
     [Parameter(Mandatory)]
-    [string]$IfNotUsedInHrs
+    [string]$IfNotUsedInHrs,
+    [Parameter(Mandatory)]
+    [string]$imageId, // Add the new parameter here
+    [Parameter(Mandatory)]
+    [string]$virtualMachineName,
+    [Parameter(Mandatory)]
+    [string]$location,
+    [Parameter(Mandatory)]
+    [string]$vmSize,
+    [Parameter(Mandatory)]
+    [string]$osDiskType,
+    [Parameter(Mandatory)]
+    [string]$virtualMachineComputerName,
+    [Parameter(Mandatory)]
+    [string]$adminUsername,
+    [Parameter(Mandatory)]
+    [string]$adminPassword,
+    [Parameter(Mandatory)]
+    [string]$networkInterfaceName
 )
 
 Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId | Out-Null
@@ -75,9 +93,18 @@ Function Replace-AvdHost {
 
     # Call up template spec to rebuild
     $params = @{
-        vmInitialNumber                = [int]$index;
-        vmAdministratorAccountPassword = $AdminVMPassword;
+        vmInitialNumber                = [int]$index
+        vmAdministratorAccountPassword = $AdminVMPassword
         hostPoolToken                  = $HPToken.Token
+        virtualMachineName             = $hostShortName
+        location                       = $VM.Location
+        vmSize                         = $VM.HardwareProfile.VmSize
+        imageId                        = $imageId // Use the new parameter here
+        osDiskType                     = $VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType
+        virtualMachineComputerName     = $hostShortName
+        adminUsername                  = $VM.OsProfile.AdminUsername
+        adminPassword                  = $AdminVMPassword
+        networkInterfaceName           = $VM.NetworkProfile.NetworkInterfaces[0].Id.Split('/')[-1]
     }
     Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
     New-AzResourceGroupDeployment `
