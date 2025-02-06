@@ -23,6 +23,11 @@ param adminPassword string
 param networkInterfaceName string
 param TemplateSpecResId string
 param TemplateSpecVersion string
+param virtualMachineName string
+param location string
+param vmSize string
+param imageId string
+param osDiskType string
 @description('ISO 8601 timestamp used for the deployment names and the Automation runbook schedule.')
 param time string = utcNow()
 
@@ -39,7 +44,7 @@ var varJobScheduleParams = {
   KeyVaultVMAdmin: KeyVaultVMAdmin
   WorkspaceId:LogAnalyticsWorkspace.WorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
-    imageId: imageId // Add the new parameter here
+  imageId: imageId
   virtualMachineName: virtualMachineName
   location: location
   vmSize: vmSize

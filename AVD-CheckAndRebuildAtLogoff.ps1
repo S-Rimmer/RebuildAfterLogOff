@@ -34,7 +34,7 @@ param(
     [Parameter(Mandatory)]
     [string]$IfNotUsedInHrs,
     [Parameter(Mandatory)]
-    [string]$imageId,
+    [string]$imageId, // Add the new parameter here
     [Parameter(Mandatory)]
     [string]$virtualMachineName,
     [Parameter(Mandatory)]
