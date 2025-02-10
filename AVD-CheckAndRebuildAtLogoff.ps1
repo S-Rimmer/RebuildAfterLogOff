@@ -125,7 +125,11 @@ Foreach ($Sessionhost in $SessionHosts) {
         $VM = Get-azVM -Name $hostShortName
         Write-Output "...Getting Template Spec ID"
         $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion).Versions.Id
-        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName
+        $VMSize = $VM.HardwareProfile.VmSize
+        $VNetName = (Get-AzVirtualNetwork -ResourceGroupName $VM.ResourceGroupName -Name $VM.NetworkProfile.NetworkInterfaces[0].Id.Split('/')[-3]).Name
+        $SubnetName = (Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNetName -Name $VM.NetworkProfile.NetworkInterfaces[0].Id.Split('/')[-1]).Name
+
+        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName
     }
     Else {
         Write-Output "...No Action Required"
