@@ -83,6 +83,18 @@ Function Replace-AvdHost {
     New-AzResourceGroupDeployment `
         -ResourceGroupName $avdRG `
         -TemplateSpecId $TemplateSpecId `
+        -TemplateUri $TemplateSpecId `
+        -nestedTemplatesLocation $nestedTemplatesLocation `
+        -artifactsLocation $artifactsLocation `
+        -hostpoolName $HostPoolName `
+        -vmResourceGroup $avdRG `
+        -vmLocation $VM.Location `
+        -vmSize $VMSize `
+        -vmNumberOfInstances 1 `
+        -vmNamePrefix $hostName `
+        -adminPassword $AdminVMPassword `
+        -vnetName $VNetName `
+        -subnetName $SubnetName `
         -TemplateParameterObject $params | Out-Null
 }
 
@@ -132,6 +144,9 @@ Foreach ($Sessionhost in $SessionHosts) {
         $vnet = Get-AzResource -ResourceId $vnetId
         $VNetName = $vnet.Name
         $SubnetName = $nic.IpConfigurations[0].Subnet.Id.Split('/')[-1]
+        $artifactsLocation = "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.02929.635.zip"
+        $nestedTemplatesLocation = "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/armtemplates/Hostpool_1.0.02929.635/nestedTemplates/"
+
         
         Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName
     }
