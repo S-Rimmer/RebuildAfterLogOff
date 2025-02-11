@@ -128,8 +128,8 @@ Foreach ($Sessionhost in $SessionHosts) {
         $VMSize = $VM.HardwareProfile.VmSize
         $nicId = $VM.NetworkProfile.NetworkInterfaces[0].Id
         $nic = Get-AzNetworkInterface -ResourceId $nicId
-        $vnetId = $nic.IpConfigurations[0].Subnet.Id.Split('/subnets/')[0]
-        vnet = Get-AzResource -ResourceId $vnetId
+        $vnetId = ($nic.IpConfigurations[0].Subnet.Id -split '/subnets/')[0]
+        $vnet = Get-AzResource -ResourceId $vnetId
         $VNetName = $vnet.Name
         $SubnetName = $nic.IpConfigurations[0].Subnet.Id.Split('/')[-1]
         
