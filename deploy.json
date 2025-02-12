@@ -217,7 +217,6 @@
       "westus2": "Pacific Standard Time",
       "westus3": "Mountain Standard Time"
     },
-    "diagnosticsLogs": "[if(contains(parameters('diagnosticLogCategoriesToEnable'), 'allLogs'), createArray(createObject('categoryGroup', 'allLogs', 'enabled', true())), variables('diagnosticsLogsSpecified'))]",
     "diagnosticsMetrics": "[array(parameters('diagnosticMetricsToEnable'))]",
     "diagnosticsMetricsObjects": "[array()]",
     "diagnosticsMetricsObjects": "[concat(variables('diagnosticsMetricsObjects'), [for (metric in variables('diagnosticsMetrics')): createObject('category', metric, 'timeGrain', null, 'enabled', true)])]"
