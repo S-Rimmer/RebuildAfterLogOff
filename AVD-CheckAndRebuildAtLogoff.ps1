@@ -46,13 +46,18 @@ Function Replace-AvdHost {
         $TemplateSpecId,
         $VM,
         $hostName,
-        $index
+        $index,
+        $VMSize,
+        $VNetName,
+        $SubnetName,
+        $adminUsername,
+        $imageId
     )
     
     # Remove from AVD Host Pool and actual VM (Including Disk and NIC)
     Write-Output "...Removing Session Host from AVD"
     Remove-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG -Name $hostName -Force
-    Write-Output "...Stoping VM"
+    Write-Output "...Stopping VM"
     Stop-AzVM -ResourceGroupName $VM.ResourceGroupName -Name $VM.Name -Force | Out-Null
     $VMNicId = $VM.NetworkProfile.NetworkInterfaces.id
     $VMDiskId = $VM.StorageProfile.OsDisk.ManagedDisk.Id
@@ -62,7 +67,6 @@ Function Replace-AvdHost {
     Remove-AzResource -ResourceId $VMNicId -Force | Out-Null
     Write-Output "...Removing OS Disk"
     Remove-AzResource -ResourceId $VMDiskId -Force | Out-Null
-    
     
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
@@ -75,27 +79,28 @@ Function Replace-AvdHost {
 
     # Call up template spec to rebuild
     $params = @{
-        vmInitialNumber                = [int]$index;
-        vmAdministratorAccountPassword = $AdminVMPassword;
-        hostPoolToken                  = $HPToken.Token
+        vmName                = $hostName;
+        vmSize                = $VMSize;
+        adminUsername         = $adminUsername;
+        adminPassword         = $AdminVMPassword;
+        hostPoolName          = $HostPoolName;
+        resourceGroupName     = $avdRG;
+        location              = $VM.Location;
+        vnetName              = $VNetName;
+        subnetName            = $SubnetName;
+        imagePublisher        = $imageId.Publisher;
+        imageOffer            = $imageId.Offer;
+        imageSku              = $imageId.Sku;
+        imageVersion          = $imageId.Version;
+        registrationInfoToken = $HPToken.Token
     }
     Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
     New-AzResourceGroupDeployment `
         -ResourceGroupName $avdRG `
         -TemplateSpecId $TemplateSpecId `
-        -TemplateUri $TemplateSpecId `
-        -nestedTemplatesLocation $nestedTemplatesLocation `
-        -artifactsLocation $artifactsLocation `
-        -hostpoolName $HostPoolName `
-        -vmResourceGroup $avdRG `
-        -vmLocation $VM.Location `
-        -vmSize $VMSize `
-        -vmNumberOfInstances 1 `
-        -vmNamePrefix $hostName `
-        -adminPassword $AdminVMPassword `
-        -vnetName $VNetName `
-        -subnetName $SubnetName `
-        -TemplateParameterObject $params | Out-Null
+        -TemplateParameterObject $params `
+        -Name $TemplateSpecName `
+        -Verbose
 }
 
 ####   MAIN SCRIPT   ####
@@ -135,6 +140,8 @@ Foreach ($Sessionhost in $SessionHosts) {
         $AdminVMPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultVMAdmin -AsPlainText
         Write-Output "...Getting VM information"
         $VM = Get-azVM -Name $hostShortName
+        $adminUsername = $VM.OsProfile.AdminUsername
+        $imageId = $VM.StorageProfile.ImageReference
         Write-Output "...Getting Template Spec ID"
         $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion).Versions.Id
         $VMSize = $VM.HardwareProfile.VmSize
@@ -144,11 +151,8 @@ Foreach ($Sessionhost in $SessionHosts) {
         $vnet = Get-AzResource -ResourceId $vnetId
         $VNetName = $vnet.Name
         $SubnetName = $nic.IpConfigurations[0].Subnet.Id.Split('/')[-1]
-        $artifactsLocation = "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.02929.635.zip"
-        $nestedTemplatesLocation = "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/armtemplates/Hostpool_1.0.02929.635/nestedTemplates/"
 
-        
-        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName
+        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName -adminUsername $adminUsername -imageId $imageId
     }
     Else {
         Write-Output "...No Action Required"
