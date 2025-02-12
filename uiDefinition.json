@@ -292,17 +292,36 @@
 							"toolTip": "The Name of the KeyVault secret that contains the encrypted password as a value.",
 							"visible": true
 						},
-						{
-							"name": "imageId",
-							"type": "Microsoft.Common.DropDown",
-							"label": "Select Image from Azure Compute Gallery",
-							"toolTip": "Select an image from the Azure Compute Gallery.",
-							"constraints": {
-								"required": true,
-								"allowedValues": "[map(steps('basics').imageApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
-							},
-							"visible": true
-						}
+                        {
+                            "name": "imageGallery",
+                            "type": "Microsoft.Common.DropDown",
+                            "label": "Select Azure Compute Gallery",
+                            "toolTip": "Select an Azure Compute Gallery.",
+                            "constraints": {
+                                "required": true,
+                                "allowedValues": "[map(steps('basics').ImageGalleryApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
+                            },
+                            "visible": true
+                        },
+                        {
+                            "name": "ImageApi",
+                            "type": "Microsoft.Solutions.ArmApiControl",
+                            "request": {
+                                "method": "GET",
+                                "path": "[concat(steps('HostPoolChoice').imageGallery, '/images?api-version=2021-03-01')]"
+                            }
+                        },
+                        {
+                            "name": "imageId",
+                            "type": "Microsoft.Common.DropDown",
+                            "label": "Select Image from Azure Compute Gallery",
+                            "toolTip": "Select an image from the Azure Compute Gallery.",
+                            "constraints": {
+                                "required": true,
+                                "allowedValues": "[map(steps('HostPoolChoice').ImageApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
+                            },
+                            "visible": true
+                        }
 					]
 				}
 			]
@@ -324,13 +343,7 @@
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
                 "TemplateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
                 "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]",
-				"imageId": {
-					"type": "string",
-					"metadata": {
-						"description": "Select the image from the Azure Compute Gallery.",
-						"strongType": "imageReference"
-					}
-				}
+				"imageId": "[steps('HostPoolChoice').imageId]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
