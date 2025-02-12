@@ -53,10 +53,10 @@
 							"name": "optionCustomScriptLocation",
 							"type": "Microsoft.Common.CheckBox",
 							"label": "Using Custom Script Location",
-							"toolTip": "Selecting this will provide additional feilds for inputting a Blob Storage URL and Sas Token. Currently the deployment uses the Internet facing GitHub site. This is common when deploying in Air Gapped Clouds.",
+							"toolTip": "Selecting this will provide additional fields for inputting a Blob Storage URL and Sas Token. Currently the deployment uses the Internet facing GitHub site. This is common when deploying in Air Gapped Clouds.",
 							"constraints": {
 								"required": false,
-								"validationMessage": "Selecting this will provide additional feilds for inputting a Blob Storage URL and Sas Token. Currently the deployment uses the Internet facing GitHub site."
+								"validationMessage": "Selecting this will provide additional fields for inputting a Blob Storage URL and Sas Token. Currently the deployment uses the Internet facing GitHub site."
 							}
 						},
 						{
@@ -201,7 +201,7 @@
 							"visible": true,
 							"label": "Log Analytics Workspace",
 							"defaultValue": "",
-							"toolTip": "Select an existing container.",
+							"toolTip": "Select an existing Log Analytics Workspace.",
 							"constraints": {
 								"required": true,
 								"allowedValues": "[map(steps('HostPoolChoice').logAnalyticsWSApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":{\"Name\":\"', item.name, '\", \"ResourceId\":\"', item.id, '\", \"WorkspaceId\":\"', item.properties.customerId, '\"}}')))]"
@@ -282,6 +282,17 @@
 							"defaultValue": "LocalAdminPassword",
 							"label": "KeyVault Secret Name (Local Admin Credential)",
 							"toolTip": "The Name of the KeyVault secret that contains the encrypted password as a value.",
+							"visible": true
+						},
+						{
+							"name": "imageId",
+							"type": "Microsoft.Common.DropDown",
+							"label": "Select Image from Azure Compute Gallery",
+							"toolTip": "Select an image from the Azure Compute Gallery.",
+							"constraints": {
+								"required": true,
+								"allowedValues": "[map(steps('basics').imageApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
+							},
 							"visible": true
 						}
 					]
