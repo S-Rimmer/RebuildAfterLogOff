@@ -84,6 +84,12 @@
       "metadata": {
         "description": "ISO 8601 timestamp used for the deployment names and the Automation runbook schedule."
       }
+    },
+    "imageId": {
+      "type": "string",
+      "metadata": {
+        "description": "The ID of the image to use for the VM."
+      }
     }
   },
   "variables": {
@@ -266,6 +272,9 @@
           },
           "systemAssignedIdentity": {
             "value": true
+          },
+          "imageId": {
+            "value": "[parameters('imageId')]"
           }
         },
         "template": {
@@ -603,7 +612,7 @@
               ]
             },
             {
-              "condition": "[or(or(or(not(empty(parameters('diagnosticStorageAccountId'))), not(empty(parameters('diagnosticWorkspaceId')))), not(empty(parameters('diagnosticEventHubAuthorizationRuleId')))), not(empty(parameters('diagnosticEventHubName'))))]",
+              "condition": "[or(or(or(not(empty(parameters('diagnosticStorageAccountId'))), not(empty(parameters('diagnosticWorkspaceId')))), not(empty(parameters('diagnosticEventHubAuthorizationRuleId')))), not(empty(parameters('diagnosticEventHubName')))]",
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
               "scope": "[format('Microsoft.Automation/automationAccounts/{0}', parameters('name'))]",

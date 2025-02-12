@@ -22,6 +22,8 @@ param TemplateSpecResId string
 param TemplateSpecVersion string
 @description('ISO 8601 timestamp used for the deployment names and the Automation runbook schedule.')
 param time string = utcNow()
+@description('The ID of the image to use for the VM.')
+param imageId string
 
 
 var varJobScheduleParams = {
@@ -178,5 +180,6 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
     ]
     skuName: 'Free'
     systemAssignedIdentity: true
+    imageId: imageId
   }
 }

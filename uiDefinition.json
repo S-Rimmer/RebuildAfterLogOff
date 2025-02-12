@@ -304,12 +304,34 @@
 				"RunbookName": "[steps('HostPoolChoice').RunbookName]",
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
                 "TemplateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
-                "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]"
-
+                "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]",
+				"imageId": {
+					"type": "string",
+					"metadata": {
+						"description": "Select the image from the Azure Compute Gallery.",
+						"strongType": "imageReference"
+					}
+				}
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
 			"subscriptionId": "[steps('basics').resourceScope.subscription.id]"
 		}
-	}
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2022-09-01",
+			"name": "[format('c_AutomtnAcct-{0}', parameters('AutomationAccountName'))]",
+			"resourceGroup": "[parameters('ResourceGroupName')]",
+			"properties": {
+				"mode": "Incremental",
+				"parameters": {
+					"imageId": {
+						"value": "[parameters('imageId')]"
+					}
+				}
+			}
+		}
+	]
 }

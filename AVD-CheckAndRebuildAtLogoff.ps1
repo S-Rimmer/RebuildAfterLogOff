@@ -32,7 +32,9 @@ param(
     [Parameter(Mandatory)]
     [string]$WorkspaceId,
     [Parameter(Mandatory)]
-    [string]$IfNotUsedInHrs
+    [string]$IfNotUsedInHrs,
+    [Parameter(Mandatory)]
+    [string]$imageId
 )
 
 Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId | Out-Null
