@@ -127,6 +127,21 @@
       "metadata": {
         "description": "Optional. The name of the diagnostic setting, if deployed. If left empty, it defaults to \"<resourceName>-diagnosticSettings\"."
       }
+    },
+    "diagnosticLogCategoriesToEnable": {
+      "type": "array",
+      "defaultValue": [
+        "allLogs"
+      ],
+      "allowedValues": [
+        "allLogs",
+        "JobLogs",
+        "JobStreams",
+        "DscNodeStatus"
+      ],
+      "metadata": {
+        "description": "Optional. The name of logs that will be streamed. \"allLogs\" includes all possible logs for the resource."
+      }
     }
   },
   "variables": {
