@@ -73,10 +73,12 @@
       "defaultValue": "AVD-CheckAndRebuildAtLogoff.ps1"
     },
     "TemplateSpecResId": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": ""
     },
     "TemplateSpecVersion": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": ""
     },
     "time": {
       "type": "string",

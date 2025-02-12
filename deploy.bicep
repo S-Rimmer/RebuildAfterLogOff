@@ -4,18 +4,18 @@ param _ArtifactsLocation string = 'https://raw.githubusercontent.com/S-Rimmer/Re
 param _ArtifactsLocationSasToken string = ''
 
 param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
-param AVDResourceGroup
-param HostPoolName
+param AVDResourceGroup string
+param HostPoolName string
 param IfNotUsedInHours int = 3
-param KeyVaultName 
-param KeyVaultVMAdmin
+param KeyVaultName string
+param KeyVaultVMAdmin string
 param Location string = 'eastus2'
 param LogAnalyticsWorkspace object = {
   Name: ''
   WorkspaceId: ''
   ResourceId: ''
 }
-param ResourceGroupName
+param ResourceGroupName string
 param RunbookName string = 'AVD-CheckAndRebuildAtLogoff'
 param RunbookScript string = 'AVD-CheckAndRebuildAtLogoff.ps1'
 param TemplateSpecResId string
