@@ -231,7 +231,7 @@
     },
     "diagnosticsLogs": "[if(contains(parameters('diagnosticLogCategoriesToEnable'), 'allLogs'), createArray(createObject('categoryGroup', 'allLogs', 'enabled', true())), variables('diagnosticsLogsSpecified'))]",
     "diagnosticsMetrics": "[array(parameters('diagnosticMetricsToEnable'))]",
-    "diagnosticsMetricsObjects": "[concat([for metric in parameters('diagnosticMetricsToEnable'): createObject('category', metric, 'timeGrain', null, 'enabled', true)])]"
+    "diagnosticsMetricsObjects": "[concat([for (metric in parameters('diagnosticMetricsToEnable')): createObject('category', metric, 'timeGrain', null, 'enabled', true)])]"
   },
   "resources": [
     {
