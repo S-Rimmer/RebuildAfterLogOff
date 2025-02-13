@@ -78,6 +78,13 @@ Function Replace-AvdHost {
     }
     $HPTokenSecure = ConvertTo-SecureString $HPToken.Token -AsPlainText -Force
 
+    # Extract image details from imageId
+    $imageIdParts = $imageId -split '/'
+    $imagePublisher = $imageIdParts[8]
+    $imageOffer = $imageIdParts[10]
+    $imageSku = $imageIdParts[12]
+    $imageVersion = $imageIdParts[14]
+
     # Call up template spec to rebuild
     $params = @{
         vmName                = $hostName;
@@ -89,7 +96,10 @@ Function Replace-AvdHost {
         location              = $VM.Location;
         vnetName              = $VNetName;
         subnetName            = $SubnetName;
-        imageId               = $imageId;
+        imagePublisher        = $imagePublisher;
+        imageOffer            = $imageOffer;
+        imageSku              = $imageSku;
+        imageVersion          = $imageVersion;
         registrationInfoToken = $HPToken.Token
     }
     Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
