@@ -352,9 +352,6 @@
           },
           "systemAssignedIdentity": {
             "value": true
-          },
-          "imageId": {
-            "value": "[parameters('imageId')]"
           }
         },
         "template": {
