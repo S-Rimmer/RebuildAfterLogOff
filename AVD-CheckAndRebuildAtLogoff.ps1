@@ -1,5 +1,5 @@
 <#
-This script is designed to rebuild a Personal VM after a users has logged off and/or no previous sessions have been noted in the past 
+This script is designed to rebuild a Personal VM after a user has logged off and/or no previous sessions have been noted in the past 
 $ifNotUsedInHrs value. This prevents rebuild of VMs that have been manually assigned but not used. The scenarios where this will help
 are:
 1. Sensitive data may be left behind and need to ensure VM is rebuilt but will be unassigned or auto assigned when complete
@@ -7,7 +7,6 @@ are:
    organization with possibly many powered down or not in use.
 
 #>
-
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -90,10 +89,7 @@ Function Replace-AvdHost {
         location              = $VM.Location;
         vnetName              = $VNetName;
         subnetName            = $SubnetName;
-        imagePublisher        = $imageId.Publisher;
-        imageOffer            = $imageId.Offer;
-        imageSku              = $imageId.Sku;
-        imageVersion          = $imageId.Version;
+        imageId               = $imageId;
         registrationInfoToken = $HPToken.Token
     }
     Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
@@ -143,7 +139,6 @@ Foreach ($Sessionhost in $SessionHosts) {
         Write-Output "...Getting VM information"
         $VM = Get-azVM -Name $hostShortName
         $adminUsername = $VM.OsProfile.AdminUsername
-        $imageId = $VM.StorageProfile.ImageReference
         Write-Output "...Getting Template Spec ID"
         $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion).Versions.Id
         $VMSize = $VM.HardwareProfile.VmSize
