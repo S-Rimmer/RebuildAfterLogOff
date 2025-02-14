@@ -89,6 +89,19 @@ Function Replace-AvdHost {
     $imageSku = $imageIdParts[12]
     $imageVersion = $imageIdParts[14]
 
+    # Fetch the latest version if the version is missing
+    if (-not $imageVersion) {
+        Write-Output "Fetching the latest version for the image..."
+        $latestImage = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Sort-Object -Property Version -Descending | Select-Object -First 1
+        if ($latestImage) {
+            $imageVersion = $latestImage.Version
+            Write-Output "Latest version found: $imageVersion"
+        } else {
+            Write-Error "Unable to fetch the latest version for the image: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku"
+            return
+        }
+    }
+
     # Verify image details
     $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Where-Object { $_.Version -eq $imageVersion }
     if (-not $image) {
