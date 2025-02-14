@@ -80,10 +80,21 @@ Function Replace-AvdHost {
 
     # Extract image details from imageId
     $imageIdParts = $imageId -split '/'
+    if ($imageIdParts.Length -lt 15) {
+        Write-Error "Invalid imageId format: $imageId"
+        return
+    }
     $imagePublisher = $imageIdParts[8]
     $imageOffer = $imageIdParts[10]
     $imageSku = $imageIdParts[12]
     $imageVersion = $imageIdParts[14]
+
+    # Verify image details
+    $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Where-Object { $_.Version -eq $imageVersion }
+    if (-not $image) {
+        Write-Error "Image not found: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku, Version: $imageVersion"
+        return
+    }
 
     # Call up template spec to rebuild
     $params = @{
