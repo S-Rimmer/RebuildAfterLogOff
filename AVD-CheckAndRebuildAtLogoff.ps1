@@ -132,7 +132,7 @@ Function Replace-AvdHost {
         imageVersion          = $imageVersion;
         registrationInfoToken = $HPToken.Token
     }
-    Write-Output "...Submitting Template Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
+    Write-Output "...Submitting Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
     New-AzResourceGroupDeployment `
         -ResourceGroupName $avdRG `
         -TemplateSpecId $TemplateSpecId `
