@@ -81,7 +81,7 @@ Function Replace-AvdHost {
     # Extract image details from imageId
     $imageIdParts = $imageId -split '/'
     if ($imageIdParts.Length -lt 15) {
-        Write-Error "Invalid imageId format: $imageId"
+        Write-Error "Invalid imageId format: $imageId. Expected format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/galleries/{galleryName}/images/{imageName}/versions/{version}"
         return
     }
     $imagePublisher = $imageIdParts[8]
