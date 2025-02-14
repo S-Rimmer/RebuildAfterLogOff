@@ -90,7 +90,7 @@
     "imageId": {
       "type": "string",
       "metadata": {
-        "description": "The ID of the image to use for the VM."
+        "description": "The ID of the image to use for the VM, including the version."
       }
     },
     "diagnosticStorageAccountId": {
