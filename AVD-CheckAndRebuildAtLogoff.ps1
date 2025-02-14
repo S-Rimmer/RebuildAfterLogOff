@@ -80,26 +80,25 @@ Function Replace-AvdHost {
 
     # Extract image details from imageId
     $imageIdParts = $imageId -split '/'
-    if ($imageIdParts.Length -lt 15) {
-        Write-Error "Invalid imageId format: $imageId. Expected format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/galleries/{galleryName}/images/{imageName}/versions/{version}"
-        return
-    }
-    $imagePublisher = $imageIdParts[8]
-    $imageOffer = $imageIdParts[10]
-    $imageSku = $imageIdParts[12]
-    $imageVersion = $imageIdParts[14]
-
-    # Fetch the latest version if the version is missing
-    if (-not $imageVersion) {
+    if ($imageIdParts.Length -lt 15 -or $imageIdParts[14] -eq "") {
         Write-Output "Fetching the latest version for the image..."
+        $imagePublisher = $imageIdParts[8]
+        $imageOffer = $imageIdParts[10]
+        $imageSku = $imageIdParts[12]
         $latestImage = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Sort-Object -Property Version -Descending | Select-Object -First 1
         if ($latestImage) {
             $imageVersion = $latestImage.Version
-            Write-Output "Latest version found: $imageVersion"
+            $imageId = "$($imageIdParts[0..13] -join '/')/versions/$imageVersion"
+            Write-Output "Latest version found and updated imageId: $imageId"
         } else {
             Write-Error "Unable to fetch the latest version for the image: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku"
             return
         }
+    } else {
+        $imagePublisher = $imageIdParts[8]
+        $imageOffer = $imageIdParts[10]
+        $imageSku = $imageIdParts[12]
+        $imageVersion = $imageIdParts[14]
     }
 
     # Verify image details
