@@ -85,6 +85,13 @@ Function Replace-AvdHost {
         $imagePublisher = $imageIdParts[8]
         $imageOffer = $imageIdParts[10]
         $imageSku = $imageIdParts[12]
+
+        # Check if any of the extracted parts are null or empty
+        if (-not $imagePublisher -or -not $imageOffer -or -not $imageSku) {
+            Write-Error "Invalid imageId format: $imageId. Unable to extract Publisher, Offer, or SKU."
+            return
+        }
+
         $latestImage = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Sort-Object -Property Version -Descending | Select-Object -First 1
         if ($latestImage) {
             $imageVersion = $latestImage.Version
