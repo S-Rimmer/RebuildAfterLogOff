@@ -92,9 +92,10 @@ Function Replace-AvdHost {
             return
         }
 
-        $latestImage = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Sort-Object -Property Version -Descending | Select-Object -First 1
-        if ($latestImage) {
-            $imageVersion = $latestImage.Version
+        # Get the latest version of the image
+        $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName | Sort-Object -Property Name -Descending | Select-Object -First 1
+        if ($latestImageVersion) {
+            $imageVersion = $latestImageVersion.Name
             $imageId = "$($imageIdParts[0..13] -join '/')/versions/$imageVersion"
             Write-Output "Latest version found and updated imageId: $imageId"
         } else {
