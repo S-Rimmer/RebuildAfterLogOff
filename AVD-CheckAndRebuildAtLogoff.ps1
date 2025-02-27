@@ -84,32 +84,26 @@ Function Replace-AvdHost {
 
     # Extract image details from imageId
     $imageIdParts = $imageId -split '/'
-    if ($imageIdParts.Length -lt 15 -or $imageIdParts[14] -eq "") {
-        Write-Output "Fetching the latest version for the image..."
-        $resourceGroupName = $imageIdParts[4]
-        $galleryName = $imageIdParts[8]
-        $imageName = $imageIdParts[10]
-
-        # Get the latest version of the image
-        $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName | Sort-Object -Property Name -Descending | Select-Object -First 1
-        if ($latestImageVersion) {
-            $imageVersion = $latestImageVersion.Name
-            $imagePublisher = $latestImageVersion.Publisher
-            $imageOffer = $latestImageVersion.Offer
-            $imageSku = $latestImageVersion.Sku
-            $imageId = "$($imageIdParts[0..13] -join '/')/versions/$imageVersion"
-            Write-Output "Latest version found and updated imageId: $imageId"
-        }
-        else {
-            Write-Error "Unable to fetch the latest version for the image: $imageName"
-            return
-        }
+    if ($imageIdParts.Length -lt 13) {
+        Write-Error "Invalid imageId format: $imageId. Unable to extract necessary details."
+        return
     }
-    else {
-        $imagePublisher = $imageIdParts[8]
-        $imageOffer = $imageIdParts[10]
-        $imageSku = $imageIdParts[12]
-        $imageVersion = $imageIdParts[14]
+    $resourceGroupName = $imageIdParts[4]
+    $galleryName = $imageIdParts[8]
+    $imageName = $imageIdParts[10]
+
+    # Get the latest version of the image
+    $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName | Sort-Object -Property Name -Descending | Select-Object -First 1
+    if ($latestImageVersion) {
+        $imageVersion = $latestImageVersion.Name
+        $imagePublisher = $latestImageVersion.Publisher
+        $imageOffer = $latestImageVersion.Offer
+        $imageSku = $latestImageVersion.Sku
+        $imageId = "$($imageIdParts[0..12] -join '/')/versions/$imageVersion"
+        Write-Output "Latest version found and updated imageId: $imageId"
+    } else {
+        Write-Error "Unable to fetch the latest version for the image: $imageName"
+        return
     }
 
     # Verify image details

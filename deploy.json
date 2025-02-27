@@ -90,7 +90,7 @@
     "imageId": {
       "type": "string",
       "metadata": {
-        "description": "The ID of the image to use for the VM, including the version."
+        "description": "The ID of the image to use for the VM, excluding the version."
       }
     },
     "diagnosticStorageAccountId": {
@@ -352,12 +352,12 @@
           },
           "systemAssignedIdentity": {
             "value": true
+          },
+          "imageId": {
+            "value": "[parameters('imageId')]"
           }
         },
         "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
             "_generator": {
               "name": "bicep",
               "version": "0.23.1.45101",
@@ -3075,6 +3075,20 @@
               },
               "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('name')), '2022-08-08', 'full').location]"
             }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('c_AutomtnAcct-{0}', parameters('AutomationAccountName'))]",
+      "resourceGroup": "[parameters('ResourceGroupName')]",
+      "properties": {
+        "mode": "Incremental",
+        "parameters": {
+          "imageId": {
+            "value": "[parameters('imageId')]"
           }
         }
       }

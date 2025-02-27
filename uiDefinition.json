@@ -318,7 +318,7 @@
                             "toolTip": "Select an image from the Azure Compute Gallery.",
                             "constraints": {
                                 "required": true,
-                                "allowedValues": "[map(steps('HostPoolChoice').ImageApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '/versions/', item.properties.latestVersion, '\"}')))]"
+                                "allowedValues": "[map(steps('HostPoolChoice').ImageApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
                             },
                             "visible": true
                         }
