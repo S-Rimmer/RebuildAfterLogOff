@@ -52,7 +52,11 @@ Function Replace-AvdHost {
         $VNetName,
         $SubnetName,
         $adminUsername,
-        $imageId
+        $imageId,
+        $imagePublisher,
+        $imageOffer,
+        $imageSku,
+        $imageVersion
     )
     
     # Remove from AVD Host Pool and actual VM (Including Disk and NIC)
@@ -192,7 +196,7 @@ Foreach ($Sessionhost in $SessionHosts) {
         $VNetName = $vnet.Name
         $SubnetName = $nic.IpConfigurations[0].Subnet.Id.Split('/')[-1]
 
-        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName -adminUsername $adminUsername -imageId $imageId
+        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName -adminUsername $adminUsername -imageId $imageId -imagePublisher $imagePublisher -imageOffer $imageOffer -imageSku $imageSku -imageVersion $imageVersion
     }
     Else {
         Write-Output "...No Action Required"
