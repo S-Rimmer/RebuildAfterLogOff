@@ -97,7 +97,7 @@ Function Replace-AvdHost {
             $imagePublisher = $latestImageVersion.Publisher
             $imageOffer = $latestImageVersion.Offer
             $imageSku = $latestImageVersion.Sku
-            $imageId = "$($imageIdParts[0..13] -join '/')/$imageVersion"
+            $imageId = "$($imageIdParts[0..13] -join '/')/versions/$imageVersion"
             Write-Output "Latest version found and updated imageId: $imageId"
         }
         else {
