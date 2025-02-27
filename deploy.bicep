@@ -36,8 +36,9 @@ var varJobScheduleParams = {
   TemplateSpecRG: split(TemplateSpecResId, '/')[4]
   KeyVaultName: KeyVaultName
   KeyVaultVMAdmin: KeyVaultVMAdmin
-  WorkspaceId:LogAnalyticsWorkspace.WorkspaceId
+  WorkspaceId: LogAnalyticsWorkspace.WorkspaceId
   IfNotUsedInHrs: IfNotUsedInHours
+  imageId: imageId
 }
 var varScheduleName = 'AVD-CheckAndRebuildAtLogoff'
 var varTimeZone = varTimeZones[Location]
