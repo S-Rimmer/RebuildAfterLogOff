@@ -350,4 +350,20 @@
 			"subscriptionId": "[steps('basics').resourceScope.subscription.id]"
 		}
 	},
+	"resources": [
+		{
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2022-09-01",
+			"name": "[format('c_AutomtnAcct-{0}', parameters('AutomationAccountName'))]",
+			"resourceGroup": "[parameters('ResourceGroupName')]",
+			"properties": {
+				"mode": "Incremental",
+				"parameters": {
+					"imageId": {
+						"value": "[parameters('imageId')]"
+					}
+				}
+			}
+		}
+	]
 }
