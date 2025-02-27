@@ -65,9 +65,9 @@ Function Replace-AvdHost {
     Write-Output "...Removing VM"
     Remove-AzVM -Name $VM.Name -ForceDeletion $true -ResourceGroupName $VM.ResourceGroupName -Force | Out-Null
     Write-Output "...Removing NIC"
-    Remove-AzResource -ResourceId $VMNicId -Force | Out-Null
+    Remove-AzResource -ResourceId $VMNicId -Force -ApiVersion "2022-09-01" | Out-Null
     Write-Output "...Removing OS Disk"
-    Remove-AzResource -ResourceId $VMDiskId -Force | Out-Null
+    Remove-AzResource -ResourceId $VMDiskId -Force -ApiVersion "2024-03-02" | Out-Null
     
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
@@ -82,24 +82,21 @@ Function Replace-AvdHost {
     $imageIdParts = $imageId -split '/'
     if ($imageIdParts.Length -lt 15 -or $imageIdParts[14] -eq "") {
         Write-Output "Fetching the latest version for the image..."
-        $imagePublisher = $imageIdParts[8]
-        $imageOffer = $imageIdParts[10]
-        $imageSku = $imageIdParts[12]
-
-        # Check if any of the extracted parts are null or empty
-        if (-not $imagePublisher -or -not $imageOffer -or -not $imageSku) {
-            Write-Error "Invalid imageId format: $imageId. Unable to extract Publisher, Offer, or SKU."
-            return
-        }
+        $resourceGroupName = $imageIdParts[4]
+        $galleryName = $imageIdParts[8]
+        $imageName = $imageIdParts[10]
 
         # Get the latest version of the image
         $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName | Sort-Object -Property Name -Descending | Select-Object -First 1
         if ($latestImageVersion) {
             $imageVersion = $latestImageVersion.Name
+            $imagePublisher = $latestImageVersion.Publisher
+            $imageOffer = $latestImageVersion.Offer
+            $imageSku = $latestImageVersion.Sku
             $imageId = "$($imageIdParts[0..13] -join '/')/versions/$imageVersion"
             Write-Output "Latest version found and updated imageId: $imageId"
         } else {
-            Write-Error "Unable to fetch the latest version for the image: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku"
+            Write-Error "Unable to fetch the latest version for the image: $imageName"
             return
         }
     } else {
@@ -110,6 +107,11 @@ Function Replace-AvdHost {
     }
 
     # Verify image details
+    if (-not $imagePublisher -or -not $imageOffer -or -not $imageSku -or -not $imageVersion) {
+        Write-Error "Invalid imageId format: $imageId. Unable to extract Publisher, Offer, SKU, or Version."
+        return
+    }
+
     $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Where-Object { $_.Version -eq $imageVersion }
     if (-not $image) {
         Write-Error "Image not found: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku, Version: $imageVersion"
