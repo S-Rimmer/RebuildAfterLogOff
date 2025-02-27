@@ -97,13 +97,15 @@ Function Replace-AvdHost {
             $imagePublisher = $latestImageVersion.Publisher
             $imageOffer = $latestImageVersion.Offer
             $imageSku = $latestImageVersion.Sku
-            $imageId = "$($imageIdParts[0..13] -join '/')$imageVersion"
+            $imageId = "$($imageIdParts[0..13] -join '/')/$imageVersion"
             Write-Output "Latest version found and updated imageId: $imageId"
-        } else {
+        }
+        else {
             Write-Error "Unable to fetch the latest version for the image: $imageName"
             return
         }
-    } else {
+    }
+    else {
         $imagePublisher = $imageIdParts[8]
         $imageOffer = $imageIdParts[10]
         $imageSku = $imageIdParts[12]
