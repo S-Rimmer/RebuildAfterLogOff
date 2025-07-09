@@ -72,17 +72,98 @@ Your Template Spec must support the following parameters:
 
 1. **Customize the sample template**:
    ```bash
-   # Download and modify sample-templatespec.bicep
-   # Update virtual network references, VM sizes, domain settings, etc.
+   # Download the sample-templatespec.bicep from this repository
+   # Modify these key areas for your environment:
+   ```
+   
+   **Required Customizations in `sample-templatespec.bicep`:**
+   ```bicep
+   // Update virtual network reference (lines 53-56)
+   resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
+     name: vnetName
+     scope: resourceGroup('YOUR-VNET-RESOURCE-GROUP-NAME') // Update this!
+   }
+   
+   // Optional: Add domain join settings (lines 49-50)
+   var domainToJoin = 'yourdomain.com'  // Add your domain
+   var ouPath = 'OU=AVD,DC=yourdomain,DC=com'  // Add your OU path
    ```
 
-2. **Create the Template Spec**:
+2. **Deploy the Template Spec to Azure**:
+
+   **Option A - Azure CLI:**
    ```bash
-   az ts create --resource-group "rg-templates" --name "avd-vm-rebuild" --location "East US 2"
-   az ts version create --resource-group "rg-templates" --template-spec-name "avd-vm-rebuild" --version "1.0" --template-file "your-customized-template.bicep"
+   # Create the Template Spec container
+   az ts create \
+     --resource-group "rg-templatespecs" \
+     --name "avd-vm-rebuild" \
+     --location "East US 2" \
+     --description "Template for rebuilding AVD session host VMs"
+
+   # Deploy your customized template as version 1.0
+   az ts version create \
+     --resource-group "rg-templatespecs" \
+     --template-spec-name "avd-vm-rebuild" \
+     --version "1.0" \
+     --template-file "sample-templatespec.bicep" \
+     --version-description "Initial version with gallery image support"
    ```
 
-3. **Use in deployment**: During the automation deployment, select this Template Spec in the UI
+   **Option B - Azure PowerShell:**
+   ```powershell
+   # Create the Template Spec container
+   New-AzTemplateSpec `
+     -ResourceGroupName "rg-templatespecs" `
+     -Name "avd-vm-rebuild" `
+     -Location "East US 2" `
+     -Description "Template for rebuilding AVD session host VMs"
+
+   # Deploy your customized template as version 1.0
+   New-AzTemplateSpecVersion `
+     -ResourceGroupName "rg-templatespecs" `
+     -TemplateSpecName "avd-vm-rebuild" `
+     -VersionName "1.0" `
+     -TemplateFile "sample-templatespec.bicep" `
+     -VersionDescription "Initial version with gallery image support"
+   ```
+
+   **Option C - Azure Portal:**
+   1. Navigate to **Template specs** in the Azure Portal
+   2. Click **Create template spec**
+   3. Enter name: `avd-vm-rebuild`
+   4. Select resource group and location
+   5. Click **Next: Edit template**
+   6. Copy/paste the content from `sample-templatespec.bicep`
+   7. Click **Review + create**
+
+3. **Test the Template Spec** (Optional but recommended):
+   ```bash
+   # Get a host pool registration token first
+   $token = (New-AzWvdRegistrationInfo -ResourceGroupName "rg-avd" -HostPoolName "hp-test" -ExpirationTime (Get-Date).AddHours(2)).Token
+
+   # Test deployment with gallery image
+   az deployment group create \
+     --resource-group "rg-avd-test" \
+     --template-spec "/subscriptions/YOUR-SUB-ID/resourceGroups/rg-templatespecs/providers/Microsoft.Resources/templateSpecs/avd-vm-rebuild/versions/1.0" \
+     --parameters \
+       vmName="test-vm-01" \
+       vmSize="Standard_D2s_v3" \
+       adminUsername="azureuser" \
+       adminPassword="YourSecurePassword123!" \
+       hostPoolName="hp-test" \
+       resourceGroupName="rg-avd-test" \
+       location="East US 2" \
+       vnetName="vnet-avd" \
+       subnetName="subnet-avd" \
+       registrationInfoToken="$token" \
+       useGalleryImage=true \
+       imageId="/subscriptions/YOUR-SUB-ID/resourceGroups/rg-images/providers/Microsoft.Compute/galleries/gal_avd/images/win10-21h2/versions/1.0.0"
+   ```
+
+4. **Use in automation deployment**: 
+   - **Template Spec**: Select your created Template Spec (e.g., `avd-vm-rebuild`)
+   - **Template Spec Version**: Enter the version (e.g., `1.0`)
+   - **Resource Group**: Where you created the Template Spec (e.g., `rg-templatespecs`)
 
 ### Template Spec Selection in UI:
 - **Template Spec Resource**: Select your created Template Spec (e.g., "avd-vm-rebuild")
@@ -90,7 +171,66 @@ Your Template Spec must support the following parameters:
 
 See `sample-templatespec.bicep` for a complete template example that you can customize for your environment.
 
-Deployment:  
+## Deployment
+
+**⚠️ Important**: You must create a Template Spec BEFORE clicking the deployment button below. See the [Template Spec deployment instructions](#template-spec-deployment-steps) or [TEMPLATE_SPEC_GUIDE.md](TEMPLATE_SPEC_GUIDE.md) for detailed steps.
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#blade/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2FS-Rimmer%2FRebuildAfterLogoff%2Fmaster%2Fdeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2FS-Rimmer%2FRebuildAfterLogoff%2Fmaster%2FuiDefinition.json)
+
+## Validation and Testing
+
+### Pre-Deployment Validation:
+Before deploying the automation, validate your Template Spec works correctly:
+
+```bash
+# Test Template Spec deployment manually
+az deployment group create \
+  --resource-group "rg-avd-test" \
+  --template-spec "/subscriptions/YOUR-SUB-ID/resourceGroups/rg-templatespecs/providers/Microsoft.Resources/templateSpecs/avd-vm-rebuild/versions/1.0" \
+  --parameters vmName="test-vm-01" vmSize="Standard_D2s_v3" adminUsername="azureuser" adminPassword="YourPassword123!"
+```
+
+### Post-Deployment Testing:
+1. **Check Automation Account**: Verify the runbook imports successfully
+2. **Review Permissions**: Confirm all role assignments are created (see Outputs section)
+3. **Test Runbook**: Run the PowerShell runbook manually to verify it executes without errors
+4. **Monitor Schedule**: Ensure the 15-minute schedule is active
+
+### Troubleshooting:
+- **Runbook Errors**: Check the Automation Account logs for detailed error messages
+- **Permission Issues**: Review the role assignments using the provided output values
+- **Template Spec Failures**: Validate Template Spec parameters and test manual deployment
+
+## Quick Reference
+
+### Essential Files:
+- **`deploy.bicep`** - Main automation deployment template
+- **`sample-templatespec.bicep`** - Sample Template Spec for VM deployment
+- **`AVD-CheckAndRebuildAtLogoff.ps1`** - PowerShell runbook script
+- **`TEMPLATE_SPEC_GUIDE.md`** - Detailed Template Spec creation guide
+- **`PERMISSIONS.md`** - Complete permissions documentation
+
+### Template Spec Quick Setup:
+```bash
+# 1. Customize sample-templatespec.bicep for your environment
+# 2. Create Template Spec
+az ts create --resource-group "rg-templatespecs" --name "avd-vm-rebuild" --location "East US 2"
+az ts version create --resource-group "rg-templatespecs" --template-spec-name "avd-vm-rebuild" --version "1.0" --template-file "sample-templatespec.bicep"
+
+# 3. Use in automation deployment:
+# - Template Spec Resource Group: rg-templatespecs
+# - Template Spec Name: avd-vm-rebuild  
+# - Template Spec Version: 1.0
+```
+
+### Support for Multiple Image Types:
+| Image Type | Format | Example |
+|------------|--------|---------|
+| **Azure Compute Gallery** | `/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{gallery}/images/{image}/versions/{version}` | `/subscriptions/.../galleries/myGallery/images/win10-21h2/versions/latest` |
+| **Marketplace** | `Publisher:Offer:Sku:Version` | `MicrosoftWindowsDesktop:Windows-10:21h2-evd:latest` |
+
+---
+
+*For detailed deployment instructions, see [TEMPLATE_SPEC_GUIDE.md](TEMPLATE_SPEC_GUIDE.md)*
+*For permissions details, see [PERMISSIONS.md](PERMISSIONS.md)*
 

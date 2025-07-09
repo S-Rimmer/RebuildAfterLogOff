@@ -1,4 +1,20 @@
-// Sample Template Spec for AVD VM deployment supporting both Azure Compute Gallery and Marketplace images
+/*
+Sample Template Spec for AVD VM deployment supporting both Azure Compute Gallery and Marketplace images
+
+BEFORE DEPLOYING AS TEMPLATE SPEC:
+1. Update the VNet resource group name on line 65 (scope: resourceGroup('rg-network'))
+2. Configure domain join settings (lines 55-58) if needed
+3. Test the template with your parameters before creating the Template Spec
+4. Deploy as Template Spec using Azure CLI, PowerShell, or Portal (see README.md)
+
+This template automatically handles:
+✅ Azure Compute Gallery images with imageId parameter
+✅ Marketplace images with publisher/offer/sku/version parameters  
+✅ Conditional domain join (Azure AD join if no domain specified)
+✅ Proper resource cleanup with deleteOption settings
+✅ AVD agent installation and host pool registration
+*/
+
 @description('Name of the virtual machine')
 param vmName string
 
@@ -52,13 +68,19 @@ param imageVersion string = ''
 // Variables
 var nicName = '${vmName}-nic'
 var computerName = vmName
-var domainToJoin = ''  // Add your domain if domain joining
-var ouPath = ''        // Add your OU path if domain joining
+
+// Domain join configuration (customize these for your environment)
+var domainToJoin = ''           // e.g., 'contoso.com' - leave empty for Azure AD join only
+var ouPath = ''                 // e.g., 'OU=AVD,DC=contoso,DC=com' - leave empty for default OU
+var domainUsername = ''         // e.g., 'admin@contoso.com' - required if domainToJoin is specified
+@secure()
+param domainPassword string = '' // Required if domainToJoin is specified
 
 // Get existing virtual network and subnet
+// ⚠️ IMPORTANT: Update the resourceGroupName below to match your VNet's resource group
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
-  scope: resourceGroup(resourceGroupName)
+  scope: resourceGroup('rg-network') // TODO: Change 'rg-network' to your VNet's resource group name
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
@@ -104,8 +126,10 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
     storageProfile: {
       imageReference: useGalleryImage ? {
+        // Azure Compute Gallery image reference
         id: imageId
       } : {
+        // Marketplace image reference
         publisher: imagePublisher
         offer: imageOffer
         sku: imageSku
@@ -118,14 +142,45 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
         managedDisk: {
           storageAccountType: 'Premium_LRS'
         }
+        deleteOption: 'Delete' // Ensures disk is deleted when VM is deleted
       }
     }
     networkProfile: {
       networkInterfaces: [
         {
           id: networkInterface.id
+          properties: {
+            deleteOption: 'Delete' // Ensures NIC is deleted when VM is deleted
+          }
         }
       ]
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true // Enables boot diagnostics for troubleshooting
+      }
+    }
+  }
+}
+
+// Optional: Domain join extension (only deployed if domainToJoin is configured)
+resource domainJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = if (!empty(domainToJoin)) {
+  parent: virtualMachine
+  name: 'DomainJoin'
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'JsonADDomainExtension'
+    typeHandlerVersion: '1.3'
+    autoUpgradeMinorVersion: true
+    settings: {
+      name: domainToJoin
+      ouPath: !empty(ouPath) ? ouPath : null
+      user: domainUsername
+      restart: true
+      options: 3
+    }
+    protectedSettings: {
+      password: domainPassword
     }
   }
 }
@@ -135,6 +190,9 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
   parent: virtualMachine
   name: 'AVDAgent'
   location: location
+  dependsOn: [
+    domainJoinExtension // Ensure domain join completes first (if enabled)
+  ]
   properties: {
     publisher: 'Microsoft.PowerShell'
     type: 'DSC'
@@ -146,7 +204,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
       properties: {
         hostPoolName: hostPoolName
         registrationInfoToken: registrationInfoToken
-        aadJoin: false
+        aadJoin: empty(domainToJoin) // Use Azure AD join if no domain specified
         UseAgentDownloadEndpoint: true
         aadJoinPreview: false
         mdmId: ''
@@ -156,6 +214,9 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
   }
 }
 
-// Output the VM resource ID
+// Outputs for verification and reference
 output vmResourceId string = virtualMachine.id
 output vmName string = virtualMachine.name
+output nicResourceId string = networkInterface.id
+output imageType string = useGalleryImage ? 'Azure Compute Gallery' : 'Marketplace'
+output joinType string = empty(domainToJoin) ? 'Azure AD Join' : 'Domain Join'
