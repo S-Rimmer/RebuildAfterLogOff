@@ -65,16 +65,22 @@ param imageSku string = ''
 @description('Marketplace image version (when useGalleryImage is false)')
 param imageVersion string = ''
 
+@description('Domain to join (optional - leave empty for Azure AD join only)')
+param domainToJoin string = ''
+
+@description('OU path for domain join (optional - leave empty for default OU)')
+param ouPath string = ''
+
+@description('Domain username for joining (required only if domainToJoin is specified)')
+param domainUsername string = ''
+
+@description('Domain password for joining (required only if domainToJoin is specified)')
+@secure()
+param domainPassword string = ''
+
 // Variables
 var nicName = '${vmName}-nic'
 var computerName = vmName
-
-// Domain join configuration (customize these for your environment)
-var domainToJoin = ''           // e.g., 'contoso.com' - leave empty for Azure AD join only
-var ouPath = ''                 // e.g., 'OU=AVD,DC=contoso,DC=com' - leave empty for default OU
-var domainUsername = ''         // e.g., 'admin@contoso.com' - required if domainToJoin is specified
-@secure()
-param domainPassword string = '' // Required if domainToJoin is specified
 
 // Get existing virtual network and subnet
 // ⚠️ IMPORTANT: Update the resourceGroupName below to match your VNet's resource group

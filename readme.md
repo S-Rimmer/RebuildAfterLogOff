@@ -234,3 +234,39 @@ az ts version create --resource-group "rg-templatespecs" --template-spec-name "a
 *For detailed deployment instructions, see [TEMPLATE_SPEC_GUIDE.md](TEMPLATE_SPEC_GUIDE.md)*
 *For permissions details, see [PERMISSIONS.md](PERMISSIONS.md)*
 
+### Template Spec Parameter Examples:
+
+**For Azure AD Join (No Domain):**
+```bash
+# When creating Template Spec - all domain parameters can be omitted or left empty
+az ts version create \
+  --resource-group "rg-templatespecs" \
+  --template-spec-name "avd-vm-rebuild" \
+  --version "1.0" \
+  --template-file "sample-templatespec.bicep"
+
+# When deploying via Template Spec - domain parameters are optional
+az deployment group create \
+  --template-spec "/subscriptions/.../templateSpecs/avd-vm-rebuild/versions/1.0" \
+  --parameters \
+    vmName="avd-vm-01" \
+    useGalleryImage=true \
+    imageId="/subscriptions/.../galleries/myGallery/images/win10/versions/latest" \
+    # domainToJoin="" (empty = Azure AD join)
+    # domainUsername="" (not needed)
+    # domainPassword="" (not needed)
+```
+
+**For Domain Join:**
+```bash
+# When deploying via Template Spec - specify domain parameters
+az deployment group create \
+  --template-spec "/subscriptions/.../templateSpecs/avd-vm-rebuild/versions/1.0" \
+  --parameters \
+    vmName="avd-vm-01" \
+    domainToJoin="contoso.com" \
+    domainUsername="admin@contoso.com" \
+    domainPassword="YourDomainPassword123!" \
+    ouPath="OU=AVD,DC=contoso,DC=com"
+```
+

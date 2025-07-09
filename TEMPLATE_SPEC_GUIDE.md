@@ -107,6 +107,66 @@ When deploying the automation solution:
 2. **Template Spec Version**: 
    - Version: `1.0`
 
+## Template Spec Parameter Configuration
+
+### For Azure AD Join (No Domain Join)
+When you don't need domain join, simply omit or leave empty the domain-related parameters:
+
+```bash
+# Template Spec creation - no special configuration needed
+az ts version create \
+  --resource-group "rg-templatespecs" \
+  --template-spec-name "avd-vm-rebuild" \
+  --version "1.0" \
+  --template-file "sample-templatespec.bicep"
+
+# Test deployment without domain join
+az deployment group create \
+  --resource-group "rg-avd-test" \
+  --template-spec "/subscriptions/YOUR-SUB-ID/resourceGroups/rg-templatespecs/providers/Microsoft.Resources/templateSpecs/avd-vm-rebuild/versions/1.0" \
+  --parameters \
+    vmName="test-vm-01" \
+    vmSize="Standard_D2s_v3" \
+    adminUsername="azureuser" \
+    adminPassword="YourPassword123!" \
+    hostPoolName="hp-test" \
+    resourceGroupName="rg-avd-test" \
+    location="East US 2" \
+    vnetName="vnet-avd" \
+    subnetName="subnet-avd" \
+    registrationInfoToken="YOUR-TOKEN" \
+    useGalleryImage=true \
+    imageId="/subscriptions/YOUR-SUB-ID/resourceGroups/rg-images/providers/Microsoft.Compute/galleries/gal_avd/images/win10/versions/latest"
+    # Note: domainToJoin, domainUsername, domainPassword, and ouPath are optional and default to empty
+```
+
+### For Domain Join
+When you need domain join, specify the domain parameters:
+
+```bash
+# Test deployment with domain join
+az deployment group create \
+  --resource-group "rg-avd-test" \
+  --template-spec "/subscriptions/YOUR-SUB-ID/resourceGroups/rg-templatespecs/providers/Microsoft.Resources/templateSpecs/avd-vm-rebuild/versions/1.0" \
+  --parameters \
+    vmName="test-vm-01" \
+    vmSize="Standard_D2s_v3" \
+    adminUsername="azureuser" \
+    adminPassword="YourPassword123!" \
+    hostPoolName="hp-test" \
+    resourceGroupName="rg-avd-test" \
+    location="East US 2" \
+    vnetName="vnet-avd" \
+    subnetName="subnet-avd" \
+    registrationInfoToken="YOUR-TOKEN" \
+    useGalleryImage=true \
+    imageId="/subscriptions/YOUR-SUB-ID/.../images/win10/versions/latest" \
+    domainToJoin="contoso.com" \
+    domainUsername="admin@contoso.com" \
+    domainPassword="YourDomainPassword123!" \
+    ouPath="OU=AVD,DC=contoso,DC=com"
+```
+
 ## Common Template Spec Patterns
 
 ### Basic AVD VM (No Domain Join)
