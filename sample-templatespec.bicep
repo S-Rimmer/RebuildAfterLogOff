@@ -1,9 +1,13 @@
 /*
 Sample Template Spec for AVD VM deployment supporting both Azure Compute Gallery and Marketplace images
 
+DEPLOYMENT METHODS:
+- Azure CLI/PowerShell: Use this Bicep file
+- Azure Portal: Use sample-templatespec.json instead (ARM JSON format required)
+
 BEFORE DEPLOYING AS TEMPLATE SPEC:
-1. Update the VNet resource group name on line 65 (scope: resourceGroup('rg-network'))
-2. Configure domain join settings (lines 55-58) if needed
+1. Update the VNet resource group name on line 80 (scope: resourceGroup('rg-network'))
+2. Configure domain join parameters if needed (all optional for Azure AD join)
 3. Test the template with your parameters before creating the Template Spec
 4. Deploy as Template Spec using Azure CLI, PowerShell, or Portal (see README.md)
 

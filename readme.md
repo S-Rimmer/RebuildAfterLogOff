@@ -133,8 +133,9 @@ Your Template Spec must support the following parameters:
    3. Enter name: `avd-vm-rebuild`
    4. Select resource group and location
    5. Click **Next: Edit template**
-   6. Copy/paste the content from `sample-templatespec.bicep`
-   7. Click **Review + create**
+   6. **Important**: Use the JSON template (`sample-templatespec.json`) not the Bicep file
+   7. Copy/paste the content from `sample-templatespec.json`
+   8. Click **Review + create**
 
 3. **Test the Template Spec** (Optional but recommended):
    ```bash
@@ -269,4 +270,20 @@ az deployment group create \
     domainPassword="YourDomainPassword123!" \
     ouPath="OU=AVD,DC=contoso,DC=com"
 ```
+
+## Template Spec File Formats
+
+This repository provides the sample template in two formats:
+
+### **For Azure CLI & PowerShell:**
+- **File**: `sample-templatespec.bicep`
+- **Format**: Bicep (recommended for CLI/PowerShell deployment)
+- **Benefits**: Cleaner syntax, easier to read and modify
+
+### **For Azure Portal:**
+- **File**: `sample-templatespec.json` 
+- **Format**: ARM JSON template with required schema
+- **Benefits**: Works directly in the Portal Template Spec editor
+
+> **Note**: Both files deploy identical resources - choose the format based on your deployment method.
 

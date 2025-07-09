@@ -81,8 +81,12 @@ New-AzTemplateSpecVersion `
    - **Resource Group**: Choose or create a resource group
    - **Location**: Same as your other resources
 4. Click **Next: Edit template**
-5. Paste your customized Bicep template
-6. Click **Review + create**
+5. **IMPORTANT**: Use `sample-templatespec.json` (ARM JSON format)
+6. Copy the entire content from `sample-templatespec.json` and paste it
+7. Verify no validation errors appear (should show green checkmark)
+8. Click **Review + create**
+
+> **Portal Requirements**: Use the JSON template file, not the Bicep file. The Portal requires ARM JSON with `$schema` and `contentVersion` properties.
 
 ## Step 3: Test the Template Spec
 
@@ -259,3 +263,19 @@ your-project/
 ```
 
 This structure helps organize your Template Spec development and deployment process.
+
+## Template Format Options
+
+This repository provides two template formats:
+
+### Option 1: Bicep Template (Recommended for CLI/PowerShell)
+- **File**: `sample-templatespec.bicep`
+- **Use with**: Azure CLI or Azure PowerShell
+- **Benefits**: Cleaner syntax, easier to customize
+
+### Option 2: ARM JSON Template (Required for Portal)
+- **File**: `sample-templatespec.json`
+- **Use with**: Azure Portal Template Spec creation
+- **Benefits**: Works directly in Portal without compilation
+
+> **Important**: The Azure Portal Template Spec editor requires ARM JSON format with proper schema headers. You cannot paste Bicep code directly into the Portal.
