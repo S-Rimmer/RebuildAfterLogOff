@@ -258,7 +258,6 @@
 							"constraints": {
 								"required": true
 							},
-							"infoMessages": [],
 							"visible": true
 						},
                         {
@@ -292,6 +291,26 @@
 							"toolTip": "The Name of the KeyVault secret that contains the encrypted password as a value.",
 							"visible": true
 						},
+						{
+							"name": "imageType",
+							"type": "Microsoft.Common.DropDown",
+							"label": "Image Type",
+							"toolTip": "Select whether to use Azure Compute Gallery or Marketplace image.",
+							"constraints": {
+								"required": true,
+								"allowedValues": [
+									{
+										"label": "Azure Compute Gallery",
+										"value": "gallery"
+									},
+									{
+										"label": "Marketplace Image",
+										"value": "marketplace"
+									}
+								]
+							},
+							"defaultValue": "Azure Compute Gallery"
+						},
                         {
                             "name": "imageGallery",
                             "type": "Microsoft.Common.DropDown",
@@ -301,7 +320,7 @@
                                 "required": true,
                                 "allowedValues": "[map(steps('basics').ImageGalleryApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
                             },
-                            "visible": true
+                            "visible": "[equals(steps('HostPoolChoice').imageType, 'gallery')]"
                         },
                         {
                             "name": "ImageApi",
@@ -312,16 +331,69 @@
                             }
                         },
                         {
-                            "name": "imageId",
+                            "name": "galleryImageId",
                             "type": "Microsoft.Common.DropDown",
                             "label": "Select Image from Azure Compute Gallery",
-                            "toolTip": "Select an image from the Azure Compute Gallery.",
+                            "toolTip": "Select an image from the Azure Compute Gallery. This will use the latest version of the selected image.",
                             "constraints": {
                                 "required": true,
-                                "allowedValues": "[map(steps('HostPoolChoice').ImageApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '/versions/', item.properties.latestVersion, '\"}')))]"
+                                "allowedValues": "[map(steps('HostPoolChoice').ImageApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.id, '\"}')))]"
                             },
-                            "visible": true
-                        }
+                            "visible": "[equals(steps('HostPoolChoice').imageType, 'gallery')]"
+                        },
+						{
+							"name": "marketplaceImageSection",
+							"type": "Microsoft.Common.Section",
+							"label": "Marketplace Image Configuration",
+							"elements": [
+								{
+									"name": "imagePublisher",
+									"type": "Microsoft.Common.TextBox",
+									"label": "Image Publisher",
+									"toolTip": "Enter the publisher name (e.g., MicrosoftWindowsDesktop)",
+									"constraints": {
+										"required": true,
+										"regex": "^[a-zA-Z0-9._-]+$",
+										"validationMessage": "Publisher name must contain only letters, numbers, periods, underscores, and hyphens."
+									}
+								},
+								{
+									"name": "imageOffer",
+									"type": "Microsoft.Common.TextBox",
+									"label": "Image Offer",
+									"toolTip": "Enter the offer name (e.g., Windows-10)",
+									"constraints": {
+										"required": true,
+										"regex": "^[a-zA-Z0-9._-]+$",
+										"validationMessage": "Offer name must contain only letters, numbers, periods, underscores, and hyphens."
+									}
+								},
+								{
+									"name": "imageSku",
+									"type": "Microsoft.Common.TextBox",
+									"label": "Image SKU",
+									"toolTip": "Enter the SKU name (e.g., 20h2-evd)",
+									"constraints": {
+										"required": true,
+										"regex": "^[a-zA-Z0-9._-]+$",
+										"validationMessage": "SKU name must contain only letters, numbers, periods, underscores, and hyphens."
+									}
+								},
+								{
+									"name": "imageVersion",
+									"type": "Microsoft.Common.TextBox",
+									"label": "Image Version",
+									"toolTip": "Enter the version (e.g., latest or specific version like 19041.804.2021.02.15)",
+									"defaultValue": "latest",
+									"constraints": {
+										"required": true,
+										"regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)$",
+										"validationMessage": "Version must be 'latest' or in format x.x.x.x"
+									}
+								}
+							],
+							"visible": "[equals(steps('HostPoolChoice').imageType, 'marketplace')]"
+						}
 					]
 				}
 			]
@@ -343,27 +415,11 @@
 				"RunbookScript:": "[steps('HostPoolChoice').postScriptName]",
                 "TemplateSpecResId": "[steps('HostPoolChoice').TemplateSpec.id]",
                 "TemplateSpecVersion": "[steps('HostPoolChoice').TemplateSpecVersion]",
-				"imageId": "[steps('HostPoolChoice').imageId]"
+				"imageId": "[if(equals(steps('HostPoolChoice').imageType, 'gallery'), steps('HostPoolChoice').galleryImageId, concat(steps('HostPoolChoice').marketplaceImageSection.imagePublisher, ':', steps('HostPoolChoice').marketplaceImageSection.imageOffer, ':', steps('HostPoolChoice').marketplaceImageSection.imageSku, ':', steps('HostPoolChoice').marketplaceImageSection.imageVersion))]"
 			},
 			"kind": "Subscription",
 			"location": "[steps('basics').resourceScope.location.name]",
 			"subscriptionId": "[steps('basics').resourceScope.subscription.id]"
 		}
-	},
-	"resources": [
-		{
-			"type": "Microsoft.Resources/deployments",
-			"apiVersion": "2022-09-01",
-			"name": "[format('c_AutomtnAcct-{0}', parameters('AutomationAccountName'))]",
-			"resourceGroup": "[parameters('ResourceGroupName')]",
-			"properties": {
-				"mode": "Incremental",
-				"parameters": {
-					"imageId": {
-						"value": "[parameters('imageId')]"
-					}
-				}
-			}
-		}
-	]
+	}
 }

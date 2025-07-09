@@ -1,3 +1,5 @@
+targetScope = 'subscription'
+
 param _ArtifactsLocation string = 'https://raw.githubusercontent.com/S-Rimmer/RebuildAfterLogOff/main/'
 @description('SaS token if needed for script location.')
 @secure()
@@ -184,3 +186,25 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
     imageId: imageId
   }
 }
+
+// Deploy role assignments at subscription scope
+module roleAssignments 'roleAssignments.bicep' = {
+  name: 'roleAssignments-${AutomationAccountName}'
+  scope: subscription()
+  params: {
+    automationAccountPrincipalId: automationAccount.outputs.systemAssignedPrincipalId
+    avdResourceGroupName: AVDResourceGroup
+    logAnalyticsWorkspaceResourceId: LogAnalyticsWorkspace.ResourceId
+    keyVaultResourceId: resourceId('Microsoft.KeyVault/vaults', KeyVaultName)
+  }
+  dependsOn: [
+    automationAccount
+  ]
+}
+
+// Outputs for verification and integration
+output automationAccountName string = automationAccount.outputs.name
+output automationAccountResourceId string = automationAccount.outputs.resourceId
+output automationAccountPrincipalId string = automationAccount.outputs.systemAssignedPrincipalId
+output roleAssignments object = roleAssignments.outputs.roleAssignmentIds
+output permissionsConfigured bool = true

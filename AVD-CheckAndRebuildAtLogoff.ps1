@@ -52,11 +52,7 @@ Function Replace-AvdHost {
         $VNetName,
         $SubnetName,
         $adminUsername,
-        $imageId,
-        $imagePublisher,
-        $imageOffer,
-        $imageSku,
-        $imageVersion
+        $imageId
     )
     
     # Remove from AVD Host Pool and actual VM (Including Disk and NIC)
@@ -82,49 +78,89 @@ Function Replace-AvdHost {
     }
     $HPTokenSecure = ConvertTo-SecureString $HPToken.Token -AsPlainText -Force
 
-    # Extract image details from imageId
-    $imageIdParts = $imageId -split '/'
-    if ($imageIdParts.Length -lt 15 -or $imageIdParts[14] -eq "") {
-        Write-Output "Fetching the latest version for the image..."
+    # Determine if this is an Azure Compute Gallery image or marketplace image
+    $isGalleryImage = $imageId -match "^/subscriptions/.*/resourceGroups/.*/providers/Microsoft\.Compute/galleries/.*/images/.*/versions/.*$"
+    
+    if ($isGalleryImage) {
+        Write-Output "Processing Azure Compute Gallery image: $imageId"
+        
+        # Parse gallery image ID
+        $imageIdParts = $imageId -split '/'
         $resourceGroupName = $imageIdParts[4]
         $galleryName = $imageIdParts[8]
         $imageName = $imageIdParts[10]
-
-        # Get the latest version of the image
-        $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName | Sort-Object -Property Name -Descending | Select-Object -First 1
-        if ($latestImageVersion) {
-            $imageVersion = $latestImageVersion.Name
-            $imagePublisher = $latestImageVersion.Publisher
-            $imageOffer = $latestImageVersion.Offer
-            $imageSku = $latestImageVersion.Sku
-            $imageId = "$($imageIdParts[0..13] -join '/')/$imageVersion"
-            Write-Output "Latest version found and updated imageId: $imageId"
+        
+        # Check if version is specified or if we need latest
+        if ($imageIdParts.Length -ge 13 -and $imageIdParts[12] -ne "") {
+            $imageVersion = $imageIdParts[12]
+            Write-Output "Using specified gallery image version: $imageVersion"
+        } else {
+            Write-Output "Fetching the latest version for gallery image..."
+            # Get the latest version of the gallery image
+            $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName | Sort-Object -Property {[System.Version]$_.Name} -Descending | Select-Object -First 1
+            if ($latestImageVersion) {
+                $imageVersion = $latestImageVersion.Name
+                $imageId = "/subscriptions/$($imageIdParts[2])/resourceGroups/$resourceGroupName/providers/Microsoft.Compute/galleries/$galleryName/images/$imageName/versions/$imageVersion"
+                Write-Output "Latest gallery version found and updated imageId: $imageId"
+            } else {
+                Write-Error "Unable to fetch the latest version for the gallery image: $imageName"
+                return
+            }
         }
-        else {
-            Write-Error "Unable to fetch the latest version for the image: $imageName"
+        
+        # Verify gallery image exists
+        try {
+            $galleryImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName -Name $imageVersion -ErrorAction Stop
+            Write-Output "Gallery image verified: $($galleryImageVersion.Id)"
+        } catch {
+            Write-Error "Gallery image not found: $imageId. Error: $($_.Exception.Message)"
             return
         }
-    }
-    else {
-        $imagePublisher = $imageIdParts[8]
-        $imageOffer = $imageIdParts[10]
-        $imageSku = $imageIdParts[12]
-        $imageVersion = $imageIdParts[14]
+        
+        # For gallery images, we use the imageId directly in template parameters
+        $imageReference = @{
+            id = $imageId
+        }
+    } else {
+        Write-Output "Processing marketplace image: $imageId"
+        
+        # Handle marketplace image format (Publisher:Offer:Sku:Version)
+        $imageIdParts = $imageId -split ':'
+        if ($imageIdParts.Length -eq 4) {
+            $imagePublisher = $imageIdParts[0]
+            $imageOffer = $imageIdParts[1]
+            $imageSku = $imageIdParts[2]
+            $imageVersion = $imageIdParts[3]
+        } else {
+            Write-Error "Invalid marketplace image format. Expected format: Publisher:Offer:Sku:Version"
+            return
+        }
+        
+        # Verify marketplace image details
+        if (-not $imagePublisher -or -not $imageOffer -or -not $imageSku -or -not $imageVersion) {
+            Write-Error "Invalid marketplace image format: $imageId. Unable to extract Publisher, Offer, SKU, or Version."
+            return
+        }
+        
+        # Verify marketplace image exists
+        try {
+            $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location -Version $imageVersion -ErrorAction Stop
+            Write-Output "Marketplace image verified: $($image.Id)"
+        } catch {
+            Write-Error "Marketplace image not found: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku, Version: $imageVersion"
+            return
+        }
+        
+        # For marketplace images, we use the traditional structure
+        $imageReference = @{
+            publisher = $imagePublisher
+            offer = $imageOffer
+            sku = $imageSku
+            version = $imageVersion
+        }
     }
 
-    # Verify image details
-    if (-not $imagePublisher -or -not $imageOffer -or -not $imageSku -or -not $imageVersion) {
-        Write-Error "Invalid imageId format: $imageId. Unable to extract Publisher, Offer, SKU, or Version."
-        return
-    }
-
-    $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location | Where-Object { $_.Version -eq $imageVersion }
-    if (-not $image) {
-        Write-Error "Image not found: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku, Version: $imageVersion"
-        return
-    }
-
-    # Call up template spec to rebuild
+    # Build template parameters based on image type
     $params = @{
         vmName                = $hostName;
         vmSize                = $VMSize;
@@ -135,11 +171,21 @@ Function Replace-AvdHost {
         location              = $VM.Location;
         vnetName              = $VNetName;
         subnetName            = $SubnetName;
-        imagePublisher        = $imagePublisher;
-        imageOffer            = $imageOffer;
-        imageSku              = $imageSku;
-        imageVersion          = $imageVersion;
         registrationInfoToken = $HPToken.Token
+    }
+    
+    # Add image reference parameters based on image type
+    if ($isGalleryImage) {
+        $params.Add('imageId', $imageId)
+        $params.Add('useGalleryImage', $true)
+        Write-Output "Using Azure Compute Gallery image: $imageId"
+    } else {
+        $params.Add('imagePublisher', $imageReference.publisher)
+        $params.Add('imageOffer', $imageReference.offer)
+        $params.Add('imageSku', $imageReference.sku)
+        $params.Add('imageVersion', $imageReference.version)
+        $params.Add('useGalleryImage', $false)
+        Write-Output "Using marketplace image: $($imageReference.publisher):$($imageReference.offer):$($imageReference.sku):$($imageReference.version)"
     }
     Write-Output "...Submitting Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
     New-AzResourceGroupDeployment `
@@ -198,7 +244,7 @@ Foreach ($Sessionhost in $SessionHosts) {
         $VNetName = $vnet.Name
         $SubnetName = $nic.IpConfigurations[0].Subnet.Id.Split('/')[-1]
 
-        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName -adminUsername $adminUsername -imageId $imageId -imagePublisher $imagePublisher -imageOffer $imageOffer -imageSku $imageSku -imageVersion $imageVersion
+        Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName -adminUsername $adminUsername -imageId $imageId
     }
     Else {
         Write-Output "...No Action Required"
