@@ -53,13 +53,42 @@ The default name of the Automation account will start with AA-AVD unless changed
 
 ## Template Spec Requirements
 
+**You must create a Template Spec BEFORE deploying this automation solution.** The Template Spec defines how new VMs are deployed to replace the rebuilt session hosts.
+
+### How to Choose/Create Your Template Spec:
+
+1. **Use the provided sample**: Start with `sample-templatespec.bicep` in this repository
+2. **Customize for your environment**: Modify networking, VM sizing, and AVD configuration
+3. **Deploy as Template Spec**: Create the Template Spec in Azure before running this automation
+
+### Required Template Spec Parameters:
 Your Template Spec must support the following parameters:
 - `useGalleryImage` (bool): Determines image type
 - `imageId` (string): Gallery image resource ID (when useGalleryImage=true)
 - `imagePublisher`, `imageOffer`, `imageSku`, `imageVersion` (strings): Marketplace image details (when useGalleryImage=false)
 - Standard VM parameters: `vmName`, `vmSize`, `adminUsername`, `adminPassword`, etc.
 
-See `sample-templatespec.bicep` for a complete template example.
+### Template Spec Deployment Steps:
+
+1. **Customize the sample template**:
+   ```bash
+   # Download and modify sample-templatespec.bicep
+   # Update virtual network references, VM sizes, domain settings, etc.
+   ```
+
+2. **Create the Template Spec**:
+   ```bash
+   az ts create --resource-group "rg-templates" --name "avd-vm-rebuild" --location "East US 2"
+   az ts version create --resource-group "rg-templates" --template-spec-name "avd-vm-rebuild" --version "1.0" --template-file "your-customized-template.bicep"
+   ```
+
+3. **Use in deployment**: During the automation deployment, select this Template Spec in the UI
+
+### Template Spec Selection in UI:
+- **Template Spec Resource**: Select your created Template Spec (e.g., "avd-vm-rebuild")
+- **Version**: Specify the version (e.g., "1.0")
+
+See `sample-templatespec.bicep` for a complete template example that you can customize for your environment.
 
 Deployment:  
 
