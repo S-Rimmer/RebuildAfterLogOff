@@ -7,6 +7,8 @@ param _ArtifactsLocationSasToken string = ''
 
 param AutomationAccountName string = 'aa-avd-check-rebuild-logoff'
 param AVDResourceGroup string
+@description('The resource group containing the virtual network (e.g., DomainJoinedDEMO)')
+param NetworkResourceGroup string
 param HostPoolName string
 param IfNotUsedInHours int = 3
 param KeyVaultName string
@@ -194,6 +196,7 @@ module roleAssignments 'roleAssignments.bicep' = {
   params: {
     automationAccountPrincipalId: automationAccount.outputs.systemAssignedPrincipalId
     avdResourceGroupName: AVDResourceGroup
+    networkResourceGroupName: NetworkResourceGroup
     logAnalyticsWorkspaceResourceId: LogAnalyticsWorkspace.ResourceId
     keyVaultResourceId: resourceId('Microsoft.KeyVault/vaults', KeyVaultName)
   }

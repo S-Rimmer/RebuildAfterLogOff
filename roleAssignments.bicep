@@ -7,6 +7,9 @@ param automationAccountPrincipalId string
 @description('The resource group name where AVD resources are located')
 param avdResourceGroupName string
 
+@description('The resource group name where the virtual network is located')
+param networkResourceGroupName string
+
 @description('The Log Analytics Workspace resource ID')
 param logAnalyticsWorkspaceResourceId string
 
@@ -17,6 +20,7 @@ param keyVaultResourceId string
 var roleDefinitionIds = {
   Reader: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   Contributor: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+  NetworkContributor: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   LogAnalyticsReader: '73c42c96-874c-492b-b04d-ab87d138a893'
   KeyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
   DesktopVirtualizationVirtualMachineContributor: 'a959dbd1-f747-45e3-8ba6-dd80f235f97c'
@@ -81,6 +85,18 @@ resource avdVmContributorRoleAssignment 'Microsoft.Authorization/roleAssignments
   }
 }
 
+// Role assignment: Network Contributor access to network resource group (for subnet join)
+resource networkContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup(networkResourceGroupName).id, automationAccountPrincipalId, roleDefinitionIds.NetworkContributor)
+  scope: resourceGroup(networkResourceGroupName)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleDefinitionIds.NetworkContributor)
+    principalId: automationAccountPrincipalId
+    principalType: 'ServicePrincipal'
+    description: 'Automation Account Network Contributor access for subnet join operations'
+  }
+}
+
 // Additional role assignment: Ensure explicit subscription access for Managed Identity
 resource subscriptionReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(subscription().id, automationAccountPrincipalId, 'subscription-reader')
@@ -97,6 +113,7 @@ output roleAssignmentIds object = {
   subscriptionReader: readerRoleAssignment.id
   subscriptionReaderExplicit: subscriptionReaderRoleAssignment.id
   avdResourceGroupContributor: contributorRoleAssignment.id
+  networkResourceGroupContributor: networkContributorRoleAssignment.id
   logAnalyticsReader: logAnalyticsReaderRoleAssignment.id
   keyVaultSecretsUser: keyVaultSecretsUserRoleAssignment.id
   avdVmContributor: avdVmContributorRoleAssignment.id
