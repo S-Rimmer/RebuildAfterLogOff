@@ -197,6 +197,11 @@ az deployment group create \
 3. **Test Runbook**: Run the PowerShell runbook manually to verify it executes without errors
 4. **Monitor Schedule**: Ensure the 15-minute schedule is active
 
+### Common Issues:
+- **MSI Subscription Access Error**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed resolution steps
+- **Template Spec Not Found**: Verify Template Spec was created successfully and version exists
+- **Role Assignment Delays**: Allow 10-15 minutes after deployment for permissions to propagate
+
 ### Troubleshooting:
 - **Runbook Errors**: Check the Automation Account logs for detailed error messages
 - **Permission Issues**: Review the role assignments using the provided output values

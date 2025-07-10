@@ -81,9 +81,21 @@ resource avdVmContributorRoleAssignment 'Microsoft.Authorization/roleAssignments
   }
 }
 
+// Additional role assignment: Ensure explicit subscription access for Managed Identity
+resource subscriptionReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(subscription().id, automationAccountPrincipalId, 'subscription-reader')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleDefinitionIds.Reader)
+    principalId: automationAccountPrincipalId
+    principalType: 'ServicePrincipal'
+    description: 'Explicit subscription Reader access for Automation Account Managed Identity'
+  }
+}
+
 // Outputs
 output roleAssignmentIds object = {
   subscriptionReader: readerRoleAssignment.id
+  subscriptionReaderExplicit: subscriptionReaderRoleAssignment.id
   avdResourceGroupContributor: contributorRoleAssignment.id
   logAnalyticsReader: logAnalyticsReaderRoleAssignment.id
   keyVaultSecretsUser: keyVaultSecretsUserRoleAssignment.id

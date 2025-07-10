@@ -152,7 +152,7 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
         name: '${varScheduleName}-0'
         frequency: 'Hour'
         interval: 1
-        startTime: dateTimeAdd(time, 'PT15M')
+        startTime: dateTimeAdd(time, 'PT30M')  // Increased to 30 minutes to allow role assignments to propagate
         TimeZone: varTimeZone
         advancedSchedule: {}
       }
@@ -160,7 +160,7 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
         name: '${varScheduleName}-1'
         frequency: 'Hour'
         interval: 1
-        startTime: dateTimeAdd(time, 'PT30M')
+        startTime: dateTimeAdd(time, 'PT45M')  // Increased to 45 minutes
         TimeZone: varTimeZone
         advancedSchedule: {}
       }
@@ -168,7 +168,7 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
         name: '${varScheduleName}-2'
         frequency: 'Hour'
         interval: 1
-        startTime: dateTimeAdd(time, 'PT45M')
+        startTime: dateTimeAdd(time, 'PT60M')  // Increased to 60 minutes
         TimeZone: varTimeZone
         advancedSchedule: {}
       }
@@ -176,7 +176,7 @@ module automationAccount 'carml/1.3.0/Microsoft.Automation/automationAccounts/de
         name: '${varScheduleName}-3'
         frequency: 'Hour'
         interval: 1
-        startTime: dateTimeAdd(time, 'PT60M')
+        startTime: dateTimeAdd(time, 'PT75M')  // Increased to 75 minutes
         TimeZone: varTimeZone
         advancedSchedule: {}
       }

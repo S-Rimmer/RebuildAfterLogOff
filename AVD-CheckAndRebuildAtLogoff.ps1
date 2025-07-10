@@ -38,6 +38,45 @@ param(
 
 Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId | Out-Null
 
+# Wait for role assignments to propagate (up to 5 minutes)
+$maxWaitTime = 300  # 5 minutes
+$waitInterval = 30  # 30 seconds
+$elapsed = 0
+
+Write-Output "Verifying subscription access and waiting for role assignments to propagate..."
+do {
+    try {
+        # Test subscription access
+        $context = Get-AzContext
+        if ($context -and $context.Subscription.Id -eq $SubscriptionId) {
+            Write-Output "Successfully connected to subscription: $SubscriptionId"
+            break
+        }
+        else {
+            throw "Context not established or wrong subscription"
+        }
+    }
+    catch {
+        if ($elapsed -ge $maxWaitTime) {
+            Write-Error "Failed to establish subscription access after $maxWaitTime seconds. Error: $($_.Exception.Message)"
+            Write-Output "Current context: $(Get-AzContext | Out-String)"
+            throw "Subscription access verification failed"
+        }
+        
+        Write-Output "Waiting for role assignments to propagate... ($elapsed/$maxWaitTime seconds)"
+        Start-Sleep -Seconds $waitInterval
+        $elapsed += $waitInterval
+        
+        # Retry connection
+        try {
+            Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId -Force | Out-Null
+        }
+        catch {
+            Write-Output "Retry connection failed: $($_.Exception.Message)"
+        }
+    }
+} while ($elapsed -lt $maxWaitTime)
+
 ###   FUNCTION: Replace VM   ###
 Function Replace-AvdHost {
     param (
