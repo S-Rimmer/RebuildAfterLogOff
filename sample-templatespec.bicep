@@ -82,6 +82,16 @@ param domainUsername string = ''
 @secure()
 param domainPassword string = ''
 
+@description('Security type for the virtual machine (Standard or TrustedLaunch)')
+@allowed(['Standard', 'TrustedLaunch'])
+param securityType string = 'TrustedLaunch'
+
+@description('Enable Secure Boot (requires TrustedLaunch security type)')
+param enableSecureBoot bool = true
+
+@description('Enable vTPM (requires TrustedLaunch security type)')
+param enableVtpm bool = true
+
 // Variables
 var nicName = '${vmName}-nic'
 var computerName = vmName
@@ -169,6 +179,15 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       bootDiagnostics: {
         enabled: true // Enables boot diagnostics for troubleshooting
       }
+    }
+    securityProfile: securityType == 'TrustedLaunch' ? {
+      securityType: securityType
+      uefiSettings: {
+        secureBootEnabled: enableSecureBoot
+        vTpmEnabled: enableVtpm
+      }
+    } : {
+      securityType: securityType
     }
   }
 }

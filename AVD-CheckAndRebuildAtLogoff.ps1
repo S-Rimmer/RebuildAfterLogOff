@@ -243,6 +243,9 @@ Function Replace-AvdHost {
             imageOffer = ""
             imageSku = ""
             imageVersion = ""
+            securityType = "TrustedLaunch"
+            enableSecureBoot = $true
+            enableVtpm = $true
         }
     } 
     else {
@@ -286,6 +289,9 @@ Function Replace-AvdHost {
             imageOffer = $imageOffer
             imageSku = $imageSku
             imageVersion = $imageVersionMarketplace
+            securityType = "TrustedLaunch"
+            enableSecureBoot = $true
+            enableVtpm = $true
         }
         
         # Verify marketplace image exists
