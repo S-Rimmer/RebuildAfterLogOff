@@ -109,9 +109,12 @@ If using a schedule:
 
 ## Troubleshooting
 
-### DSC Extension Errors (mdmId Parameter)
-1. **Update Template Spec** to remove deprecated `mdmId` and `sessionHostConfigurationLastUpdateTime` parameters
-2. Deploy updated Template Spec version
+### DSC Extension Errors (Deprecated Parameters)
+1. **Update Template Spec** to remove deprecated parameters:
+   - Remove `mdmId` parameter
+   - Remove `sessionHostConfigurationLastUpdateTime` parameter  
+   - Remove `aadJoinPreview` parameter
+2. Deploy updated Template Spec version (recommend version 1.1 or higher)
 3. Update runbook to reference new Template Spec version
 4. See `FIX_DSC_EXTENSION_ERROR.md` for detailed steps
 

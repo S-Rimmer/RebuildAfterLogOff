@@ -227,9 +227,7 @@ resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-
     type: 'AADLoginForWindows'
     typeHandlerVersion: '1.0'
     autoUpgradeMinorVersion: true
-    settings: {
-      mdmId: ''
-    }
+    // No settings required - extension works without configuration
   }
 }
 
@@ -255,7 +253,6 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
         registrationInfoToken: registrationInfoToken
         aadJoin: empty(domainToJoin) ? true : false
         UseAgentDownloadEndpoint: true
-        aadJoinPreview: false
       }
     }
   }

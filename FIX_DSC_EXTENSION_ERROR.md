@@ -7,34 +7,63 @@ The AVD Agent (DSC) extension fails with the error:
 ```
 
 ## Root Cause
-The `mdmId` and `sessionHostConfigurationLastUpdateTime` parameters have been **deprecated** in newer versions of the AVD agent DSC extension. These parameters are no longer supported and cause the extension to fail.
+The following parameters have been **deprecated** in newer versions of Azure VM extensions:
+
+**DSC Extension (AVD Agent):**
+- `mdmId` - Mobile Device Management ID (no longer used)
+- `sessionHostConfigurationLastUpdateTime` - Session configuration timestamp (replaced by other mechanisms)
+- `aadJoinPreview` - Azure AD join preview flag (functionality now built-in)
+
+**AADLoginForWindows Extension:**
+- `mdmId` - Mobile Device Management ID (no longer required)
+
+These deprecated parameters cause extension failures and must be removed.
 
 ## ✅ Solution Applied
 Updated the Template Spec (`sample-templatespec.bicep`) to remove the deprecated parameters:
 
-### ❌ Old Configuration (Causing Error)
+### ❌ Old Configuration (Causing Errors)
+
+**DSC Extension:**
 ```bicep
-properties: {
-  hostPoolName: hostPoolName
-  registrationInfoToken: registrationInfoToken
-  aadJoin: empty(domainToJoin) ? true : false
-  UseAgentDownloadEndpoint: true
-  aadJoinPreview: false
-  mdmId: ''                              // ❌ DEPRECATED - Causes error
-  sessionHostConfigurationLastUpdateTime: ''  // ❌ DEPRECATED - Causes error
+settings: {
+  properties: {
+    hostPoolName: hostPoolName
+    registrationInfoToken: registrationInfoToken
+    aadJoin: empty(domainToJoin) ? true : false
+    UseAgentDownloadEndpoint: true
+    aadJoinPreview: false                    // ❌ DEPRECATED - Causes error
+    mdmId: ''                              // ❌ DEPRECATED - Causes error
+    sessionHostConfigurationLastUpdateTime: ''  // ❌ DEPRECATED - Causes error
+  }
+}
+```
+
+**AADLoginForWindows Extension:**
+```bicep
+settings: {
+  mdmId: ''  // ❌ DEPRECATED - Causes error
 }
 ```
 
 ### ✅ New Configuration (Fixed)
+
+**DSC Extension:**
 ```bicep
-properties: {
-  hostPoolName: hostPoolName
-  registrationInfoToken: registrationInfoToken
-  aadJoin: empty(domainToJoin) ? true : false
-  UseAgentDownloadEndpoint: true
-  aadJoinPreview: false
-  // Removed deprecated parameters
+settings: {
+  properties: {
+    hostPoolName: hostPoolName
+    registrationInfoToken: registrationInfoToken
+    aadJoin: empty(domainToJoin) ? true : false
+    UseAgentDownloadEndpoint: true
+    // All deprecated parameters removed
+  }
 }
+```
+
+**AADLoginForWindows Extension:**
+```bicep
+// No settings required - extension works without configuration
 ```
 
 ## Current Supported Parameters
@@ -46,14 +75,14 @@ The AVD Agent DSC extension now supports these parameters:
 | `registrationInfoToken` | String | Yes | Host pool registration token |
 | `aadJoin` | Boolean | No | Whether to perform Azure AD join (default: false) |
 | `UseAgentDownloadEndpoint` | Boolean | No | Use Microsoft endpoint for agent download |
-| `aadJoinPreview` | Boolean | No | Enable Azure AD join preview features |
 
 ## What Changed
-Microsoft updated the AVD agent DSC extension to:
-1. **Remove MDM (Mobile Device Management) parameters** - `mdmId` is no longer used
-2. **Remove session host configuration parameters** - Managed through other mechanisms
-3. **Simplify configuration** - Focus on core registration parameters
-4. **Improve reliability** - Fewer parameters reduce configuration errors
+Microsoft updated Azure VM extensions to:
+1. **Remove MDM (Mobile Device Management) parameters** - No longer used in modern Azure AD scenarios
+2. **Remove session host configuration parameters** - Managed through Azure Virtual Desktop service directly  
+3. **Remove preview parameters** - Preview functionality is now built into the core extension
+4. **Simplify AAD extension configuration** - AADLoginForWindows extension works without settings
+5. **Improve reliability** - Fewer parameters reduce configuration errors and compatibility issues
 
 ## Impact of This Fix
 - ✅ **VMs will deploy successfully** without DSC extension errors
