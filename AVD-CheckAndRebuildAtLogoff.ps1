@@ -165,11 +165,27 @@ Function Replace-AvdHost {
     }
     
     # Ensure Host Pool Token exists and create if not
-    Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
+    Write-Output "...Getting Registration Token if doesn't exist (4hrs for deployment)"
     $HPToken = Get-AzWvdHostPoolRegistrationToken -HostPoolName $HostPoolName -ResourceGroupName $avdRG
     If ($null -eq $HPToken.Token) {
-        $ExpirationTime = $((Get-Date).ToUniversalTime().AddHours(2).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ'))
+        # Create new token with 4-hour expiration for deployment
+        $ExpirationTime = $((Get-Date).ToUniversalTime().AddHours(4).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ'))
         $HPToken = New-AzWvdRegistrationInfo -ResourceGroupName $avdRG -HostPoolName $HostPoolName -ExpirationTime $ExpirationTime
+        Write-Output "...Created new registration token, expires: $ExpirationTime"
+    }
+    else {
+        # Check if token is expiring soon (within 30 minutes)
+        $tokenExpiry = [DateTime]::Parse($HPToken.ExpirationTime)
+        $timeUntilExpiry = $tokenExpiry - (Get-Date).ToUniversalTime()
+        if ($timeUntilExpiry.TotalMinutes -lt 30) {
+            Write-Output "...Token expires soon, creating new token"
+            $ExpirationTime = $((Get-Date).ToUniversalTime().AddHours(4).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ'))
+            $HPToken = New-AzWvdRegistrationInfo -ResourceGroupName $avdRG -HostPoolName $HostPoolName -ExpirationTime $ExpirationTime
+            Write-Output "...Created new registration token, expires: $ExpirationTime"
+        }
+        else {
+            Write-Output "...Using existing token, expires: $($HPToken.ExpirationTime)"
+        }
     }
     # Token is now available for template deployment
 
@@ -316,6 +332,40 @@ Function Replace-AvdHost {
             -ErrorAction Stop
         
         Write-Output "Template deployment completed successfully. Deployment name: $($deployment.DeploymentName)"
+        
+        # Wait for VM to be ready and check AVD agent status
+        Write-Output "...Waiting for VM deployment to complete and checking AVD registration..."
+        $maxWaitTime = 900  # 15 minutes
+        $checkInterval = 30 # 30 seconds
+        $elapsed = 0
+        $vmRegistered = $false
+        
+        while ($elapsed -lt $maxWaitTime -and -not $vmRegistered) {
+            Start-Sleep -Seconds $checkInterval
+            $elapsed += $checkInterval
+            
+            try {
+                # Check if session host is registered and available
+                $newSessionHost = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG -Name $hostName -ErrorAction SilentlyContinue
+                if ($newSessionHost -and $newSessionHost.Status -eq "Available") {
+                    Write-Output "✅ VM successfully registered and available in AVD host pool"
+                    $vmRegistered = $true
+                }
+                elseif ($newSessionHost) {
+                    Write-Output "...Session host status: $($newSessionHost.Status) - waiting... ($elapsed/$maxWaitTime seconds)"
+                }
+                else {
+                    Write-Output "...Session host not yet registered - waiting... ($elapsed/$maxWaitTime seconds)"
+                }
+            }
+            catch {
+                Write-Output "...Checking registration status... ($elapsed/$maxWaitTime seconds)"
+            }
+        }
+        
+        if (-not $vmRegistered) {
+            Write-Warning "⚠️ VM deployment completed but AVD registration may not be complete. Check session host status in Azure Portal."
+        }
     }
     catch {
         Write-Error "Template deployment failed: $($_.Exception.Message)"

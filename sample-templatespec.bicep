@@ -214,6 +214,22 @@ resource domainJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-
   }
 }
 
+// Azure AD Join extension (only deployed if NOT domain joining)
+resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = if (empty(domainToJoin)) {
+  parent: virtualMachine
+  name: 'AADLoginForWindows'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Azure.ActiveDirectory'
+    type: 'AADLoginForWindows'
+    typeHandlerVersion: '1.0'
+    autoUpgradeMinorVersion: true
+    settings: {
+      mdmId: ''
+    }
+  }
+}
+
 // Install AVD agent and register with host pool
 resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
   parent: virtualMachine
@@ -221,6 +237,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
   location: location
   dependsOn: [
     domainJoinExtension // Ensure domain join completes first (if enabled)
+    aadJoinExtension    // Ensure Azure AD join completes first (if enabled)
   ]
   properties: {
     publisher: 'Microsoft.PowerShell'
@@ -228,12 +245,12 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
     typeHandlerVersion: '2.73'
     autoUpgradeMinorVersion: true
     settings: {
-      modulesUrl: 'https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_09-08-2022.zip'
+      modulesUrl: 'https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_3-10-2021.zip'
       configurationFunction: 'Configuration.ps1\\AddSessionHost'
       properties: {
         hostPoolName: hostPoolName
         registrationInfoToken: registrationInfoToken
-        aadJoin: empty(domainToJoin) // Use Azure AD join if no domain specified
+        aadJoin: empty(domainToJoin) ? true : false
         UseAgentDownloadEndpoint: true
         aadJoinPreview: false
         mdmId: ''
