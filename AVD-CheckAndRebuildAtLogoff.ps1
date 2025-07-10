@@ -194,7 +194,8 @@ Function Replace-AvdHost {
         if ($imageIdParts.Length -ge 13 -and $imageIdParts[12] -ne "" -and $imageIdParts[12] -ne "latest") {
             $imageVersion = $imageIdParts[12]
             Write-Output "Using specified gallery image version: $imageVersion"
-        } else {
+        } 
+        else {
             Write-Output "Fetching the latest version for gallery image..."
             # Get the latest version of the gallery image
             try {
@@ -203,7 +204,8 @@ Function Replace-AvdHost {
                     $imageVersion = $latestImageVersion.Name
                     $imageId = "/subscriptions/$($imageIdParts[2])/resourceGroups/$resourceGroupName/providers/Microsoft.Compute/galleries/$galleryName/images/$imageName/versions/$imageVersion"
                     Write-Output "Latest gallery version found and updated imageId: $imageId"
-                } else {
+                } 
+                else {
                     Write-Error "Unable to fetch the latest version for the gallery image: $imageName"
                     return
                 }
@@ -218,7 +220,8 @@ Function Replace-AvdHost {
         try {
             $galleryImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName -Name $imageVersion -ErrorAction Stop
             Write-Output "Gallery image verified: $($galleryImageVersion.Id)"
-        } catch {
+        } 
+        catch {
             Write-Error "Gallery image not found: $imageId. Error: $($_.Exception.Message)"
             return
         }
@@ -241,7 +244,8 @@ Function Replace-AvdHost {
             imageSku = ""
             imageVersion = ""
         }
-    } else {
+    } 
+    else {
         Write-Output "Processing marketplace image: $imageId"
         
         # Handle marketplace image format (Publisher:Offer:Sku:Version)
@@ -251,7 +255,8 @@ Function Replace-AvdHost {
             $imageOffer = $imageIdParts[1]
             $imageSku = $imageIdParts[2]
             $imageVersionMarketplace = $imageIdParts[3]
-        } else {
+        } 
+        else {
             Write-Error "Invalid marketplace image format. Expected format: Publisher:Offer:Sku:Version but got: $imageId"
             return
         }
@@ -287,7 +292,8 @@ Function Replace-AvdHost {
         try {
             $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location -Version $imageVersionMarketplace -ErrorAction Stop
             Write-Output "Marketplace image verified: $($image.Id)"
-        } catch {
+        } 
+        catch {
             Write-Error "Marketplace image not found: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku, Version: $imageVersionMarketplace"
             return
         }
@@ -335,8 +341,14 @@ Foreach ($Sessionhost in $SessionHosts) {
     |sort by TimeGenerated asc, CorrelationId'
     
     $PrevSessions = Invoke-AzOperationalInsightsQuery -WorkspaceId $WorkspaceId -Query $Query | Select-Object -ExpandProperty Results
-    If ($null -ne $PrevSessions) { $PrevSessionTime = [datetime]$PrevSessions[-1].TimeGenerated; $PrevUsed = $true }
-    else { $PrevSessionTime = "No logons found in Log Analytics in past $IfNotUsedInHrs hrs (Logging can be delayd!)"; $PrevUsed = $false }
+    If ($null -ne $PrevSessions) { 
+        $PrevSessionTime = [datetime]$PrevSessions[-1].TimeGenerated
+        $PrevUsed = $true 
+    }
+    else { 
+        $PrevSessionTime = "No logons found in Log Analytics in past $IfNotUsedInHrs hrs (Logging can be delayd!)"
+        $PrevUsed = $false 
+    }
     Write-Output "...Last Logon: $PrevSessionTime"
 
     If (($session.SessionState -ne "Active") -and ($session.SessionState -ne "Disconnected") -and ($session.SessionState -ne "Pending") -and ($PrevUsed)) {
@@ -411,4 +423,7 @@ Foreach ($Sessionhost in $SessionHosts) {
         Write-Output "...No Action Required"
     }
 }
-If ($null -eq $SessionHosts) { Write-Output "No Session Hosts found with assigned users." }
+
+If ($null -eq $SessionHosts) { 
+    Write-Output "No Session Hosts found with assigned users." 
+}
