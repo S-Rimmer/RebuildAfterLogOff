@@ -109,6 +109,12 @@ If using a schedule:
 
 ## Troubleshooting
 
+### DSC Extension Errors (mdmId Parameter)
+1. **Update Template Spec** to remove deprecated `mdmId` and `sessionHostConfigurationLastUpdateTime` parameters
+2. Deploy updated Template Spec version
+3. Update runbook to reference new Template Spec version
+4. See `FIX_DSC_EXTENSION_ERROR.md` for detailed steps
+
 ### Azure AD Join Errors (0x801c002d)
 1. **Set `enableAzureADJoin = false`** to disable the problematic extension
 2. Test VM deployment without Azure AD Join

@@ -256,8 +256,6 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
         aadJoin: empty(domainToJoin) ? true : false
         UseAgentDownloadEndpoint: true
         aadJoinPreview: false
-        mdmId: ''
-        sessionHostConfigurationLastUpdateTime: ''
       }
     }
   }
