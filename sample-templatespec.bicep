@@ -92,6 +92,9 @@ param enableSecureBoot bool = true
 @description('Enable vTPM (requires TrustedLaunch security type)')
 param enableVtpm bool = true
 
+@description('Enable Azure AD join extension (set to false if experiencing AAD join issues)')
+param enableAzureADJoin bool = true
+
 // Variables
 var nicName = '${vmName}-nic'
 var computerName = vmName
@@ -215,7 +218,7 @@ resource domainJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-
 }
 
 // Azure AD Join extension (only deployed if NOT domain joining)
-resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = if (empty(domainToJoin)) {
+resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = if (empty(domainToJoin) && enableAzureADJoin) {
   parent: virtualMachine
   name: 'AADLoginForWindows'
   location: location

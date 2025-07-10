@@ -6,6 +6,11 @@ are:
 2. Personal Host Pool with FSLogix for Profiles and to save cost only have subset of VMs for active users and not all all users in the 
    organization with possibly many powered down or not in use.
 
+PARAMETERS:
+- enableAzureADJoin: Set to $false to disable Azure AD Join extension if experiencing connectivity issues (default: $false)
+  Azure AD Join requires network connectivity to Azure AD endpoints. If experiencing errors like 0x801c002d, 
+  disable this feature and troubleshoot network connectivity separately.
+
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
@@ -33,7 +38,9 @@ param(
     [Parameter(Mandatory)]
     [string]$IfNotUsedInHrs,
     [Parameter(Mandatory)]
-    [string]$imageId
+    [string]$imageId,
+    [Parameter(Mandatory = $false)]
+    [bool]$enableAzureADJoin = $false
 )
 
 Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId | Out-Null
@@ -262,6 +269,7 @@ Function Replace-AvdHost {
             securityType = "TrustedLaunch"
             enableSecureBoot = $true
             enableVtpm = $true
+            enableAzureADJoin = $enableAzureADJoin
         }
     } 
     else {
@@ -308,6 +316,7 @@ Function Replace-AvdHost {
             securityType = "TrustedLaunch"
             enableSecureBoot = $true
             enableVtpm = $true
+            enableAzureADJoin = $enableAzureADJoin
         }
         
         # Verify marketplace image exists
