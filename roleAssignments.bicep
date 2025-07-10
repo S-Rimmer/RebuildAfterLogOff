@@ -57,7 +57,7 @@ resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignmen
   }
 }
 
-// Role assignment: Key Vault Secrets User access
+// Role assignment: Key Vault Secrets User access - assigned directly to Key Vault
 resource keyVaultSecretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(keyVaultResourceId, automationAccountPrincipalId, roleDefinitionIds.KeyVaultSecretsUser)
   scope: resourceGroup(split(keyVaultResourceId, '/')[4])

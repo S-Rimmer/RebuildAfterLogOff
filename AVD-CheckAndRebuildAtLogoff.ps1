@@ -2,7 +2,17 @@
 This script is designed to rebuild a Personal VM after a user has logged off and/or no previous sessions have been noted in the past 
 $ifNotUsedInHrs value. This prevents rebuild of VMs that have been manually assigned but not used. The scenarios where this will help
 are:
-1. Sensitive data may be left behind and need to ensure VM is rebuilt but will be unassigned or auto assigned when complete
+1. Sensitive data         }
+        
+        # For marketplace images, verify the image exists
+        try {
+            $marketplaceImage = Get-AzVMImage -Location $VM.Location -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Version $imageVersionMarketplace -ErrorAction Stop
+            Write-Output "Marketplace image verified: $($marketplaceImage.Id)"
+        } catch {
+            Write-Error "Marketplace image not found: $imagePublisher:$imageOffer:$imageSku:$imageVersionMarketplace. Error: $($_.Exception.Message)"
+            return
+        }
+    } behind and need to ensure VM is rebuilt but will be unassigned or auto assigned when complete
 2. Personal Host Pool with FSLogix for Profiles and to save cost only have subset of VMs for active users and not all all users in the 
    organization with possibly many powered down or not in use.
 
@@ -97,16 +107,72 @@ Function Replace-AvdHost {
     # Remove from AVD Host Pool and actual VM (Including Disk and NIC)
     Write-Output "...Removing Session Host from AVD"
     Remove-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG -Name $hostName -Force
+    
+    # Safely extract VM resource information with null checks
+    if (-not $VM) {
+        Write-Error "VM object is null, cannot proceed with removal"
+        return
+    }
+    
     Write-Output "...Stopping VM"
-    Stop-AzVM -ResourceGroupName $VM.ResourceGroupName -Name $VM.Name -Force | Out-Null
-    $VMNicId = $VM.NetworkProfile.NetworkInterfaces.id
-    $VMDiskId = $VM.StorageProfile.OsDisk.ManagedDisk.Id
+    try {
+        if ($VM.ResourceGroupName -and $VM.Name) {
+            Stop-AzVM -ResourceGroupName $VM.ResourceGroupName -Name $VM.Name -Force | Out-Null
+        }
+        else {
+            Write-Error "VM ResourceGroupName or Name is null: RG=$($VM.ResourceGroupName), Name=$($VM.Name)"
+            return
+        }
+    }
+    catch {
+        Write-Error "Failed to stop VM: $($_.Exception.Message)"
+    }
+    
+    # Safely extract NIC and Disk IDs
+    $VMNicId = $null
+    $VMDiskId = $null
+    
+    if ($VM.NetworkProfile -and $VM.NetworkProfile.NetworkInterfaces -and $VM.NetworkProfile.NetworkInterfaces.Count -gt 0) {
+        $VMNicId = $VM.NetworkProfile.NetworkInterfaces[0].id
+    }
+    
+    if ($VM.StorageProfile -and $VM.StorageProfile.OsDisk -and $VM.StorageProfile.OsDisk.ManagedDisk) {
+        $VMDiskId = $VM.StorageProfile.OsDisk.ManagedDisk.Id
+    }
+    
     Write-Output "...Removing VM"
-    Remove-AzVM -Name $VM.Name -ForceDeletion $true -ResourceGroupName $VM.ResourceGroupName -Force | Out-Null
-    Write-Output "...Removing NIC"
-    Remove-AzResource -ResourceId $VMNicId -Force -ApiVersion "2022-09-01" | Out-Null
-    Write-Output "...Removing OS Disk"
-    Remove-AzResource -ResourceId $VMDiskId -Force -ApiVersion "2024-03-02" | Out-Null
+    try {
+        Remove-AzVM -Name $VM.Name -ForceDeletion $true -ResourceGroupName $VM.ResourceGroupName -Force | Out-Null
+    }
+    catch {
+        Write-Error "Failed to remove VM: $($_.Exception.Message)"
+    }
+    
+    if ($VMNicId) {
+        Write-Output "...Removing NIC"
+        try {
+            Remove-AzResource -ResourceId $VMNicId -Force -ApiVersion "2022-09-01" | Out-Null
+        }
+        catch {
+            Write-Error "Failed to remove NIC: $($_.Exception.Message)"
+        }
+    }
+    else {
+        Write-Output "...Warning: NIC ID not found, skipping NIC removal"
+    }
+    
+    if ($VMDiskId) {
+        Write-Output "...Removing OS Disk"
+        try {
+            Remove-AzResource -ResourceId $VMDiskId -Force -ApiVersion "2024-03-02" | Out-Null
+        }
+        catch {
+            Write-Error "Failed to remove OS Disk: $($_.Exception.Message)"
+        }
+    }
+    else {
+        Write-Output "...Warning: Disk ID not found, skipping disk removal"
+    }
     
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
@@ -118,31 +184,42 @@ Function Replace-AvdHost {
     $HPTokenSecure = ConvertTo-SecureString $HPToken.Token -AsPlainText -Force
 
     # Determine if this is an Azure Compute Gallery image or marketplace image
-    $isGalleryImage = $imageId -match "^/subscriptions/.*/resourceGroups/.*/providers/Microsoft\.Compute/galleries/.*/images/.*/versions/.*$"
+    $isGalleryImage = $imageId -match "^/subscriptions/.*/resourceGroups/.*/providers/Microsoft\.Compute/galleries/.*/images/.*"
     
     if ($isGalleryImage) {
         Write-Output "Processing Azure Compute Gallery image: $imageId"
         
-        # Parse gallery image ID
+        # Parse gallery image ID - handle both with and without version
         $imageIdParts = $imageId -split '/'
+        if ($imageIdParts.Length -lt 11) {
+            Write-Error "Invalid gallery image ID format: $imageId"
+            return
+        }
+        
         $resourceGroupName = $imageIdParts[4]
         $galleryName = $imageIdParts[8]
         $imageName = $imageIdParts[10]
         
-        # Check if version is specified or if we need latest
-        if ($imageIdParts.Length -ge 13 -and $imageIdParts[12] -ne "") {
+        # Check if version is specified (length 13+) or if we need latest
+        if ($imageIdParts.Length -ge 13 -and $imageIdParts[12] -ne "" -and $imageIdParts[12] -ne "latest") {
             $imageVersion = $imageIdParts[12]
             Write-Output "Using specified gallery image version: $imageVersion"
         } else {
             Write-Output "Fetching the latest version for gallery image..."
             # Get the latest version of the gallery image
-            $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName | Sort-Object -Property {[System.Version]$_.Name} -Descending | Select-Object -First 1
-            if ($latestImageVersion) {
-                $imageVersion = $latestImageVersion.Name
-                $imageId = "/subscriptions/$($imageIdParts[2])/resourceGroups/$resourceGroupName/providers/Microsoft.Compute/galleries/$galleryName/images/$imageName/versions/$imageVersion"
-                Write-Output "Latest gallery version found and updated imageId: $imageId"
-            } else {
-                Write-Error "Unable to fetch the latest version for the gallery image: $imageName"
+            try {
+                $latestImageVersion = Get-AzGalleryImageVersion -ResourceGroupName $resourceGroupName -GalleryName $galleryName -GalleryImageDefinitionName $imageName -ErrorAction Stop | Sort-Object -Property {[System.Version]$_.Name} -Descending | Select-Object -First 1
+                if ($latestImageVersion) {
+                    $imageVersion = $latestImageVersion.Name
+                    $imageId = "/subscriptions/$($imageIdParts[2])/resourceGroups/$resourceGroupName/providers/Microsoft.Compute/galleries/$galleryName/images/$imageName/versions/$imageVersion"
+                    Write-Output "Latest gallery version found and updated imageId: $imageId"
+                } else {
+                    Write-Error "Unable to fetch the latest version for the gallery image: $imageName"
+                    return
+                }
+            }
+            catch {
+                Write-Error "Failed to retrieve gallery image versions: $($_.Exception.Message)"
                 return
             }
         }
@@ -156,9 +233,23 @@ Function Replace-AvdHost {
             return
         }
         
-        # For gallery images, we use the imageId directly in template parameters
-        $imageReference = @{
-            id = $imageId
+        # Template parameters for gallery image
+        $templateParams = @{
+            vmName = $hostName
+            vmSize = $VMSize
+            adminUsername = $adminUsername  
+            adminPassword = $AdminVMPassword
+            hostPoolName = $HostPoolName
+            resourceGroupName = $avdRG
+            vnetName = $VNetName
+            subnetName = $SubnetName
+            registrationInfoToken = $HPToken.Token
+            useGalleryImage = $true
+            imageId = $imageId
+            imagePublisher = ""
+            imageOffer = ""
+            imageSku = ""
+            imageVersion = ""
         }
     } else {
         Write-Output "Processing marketplace image: $imageId"
@@ -169,15 +260,39 @@ Function Replace-AvdHost {
             $imagePublisher = $imageIdParts[0]
             $imageOffer = $imageIdParts[1]
             $imageSku = $imageIdParts[2]
-            $imageVersion = $imageIdParts[3]
+            $imageVersionMarketplace = $imageIdParts[3]
         } else {
-            Write-Error "Invalid marketplace image format. Expected format: Publisher:Offer:Sku:Version"
+            Write-Error "Invalid marketplace image format. Expected format: Publisher:Offer:Sku:Version but got: $imageId"
             return
         }
         
         # Verify marketplace image details
-        if (-not $imagePublisher -or -not $imageOffer -or -not $imageSku -or -not $imageVersion) {
+        if (-not $imagePublisher -or -not $imageOffer -or -not $imageSku -or -not $imageVersionMarketplace) {
             Write-Error "Invalid marketplace image format: $imageId. Unable to extract Publisher, Offer, SKU, or Version."
+            return
+        }
+        
+        Write-Output "Marketplace image details - Publisher: $imagePublisher, Offer: $imageOffer, SKU: $imageSku, Version: $imageVersionMarketplace"
+        
+        # Template parameters for marketplace image
+        $templateParams = @{
+            vmName = $hostName
+            vmSize = $VMSize
+            adminUsername = $adminUsername  
+            adminPassword = $AdminVMPassword
+            hostPoolName = $HostPoolName
+            resourceGroupName = $avdRG
+            vnetName = $VNetName
+            subnetName = $SubnetName
+            registrationInfoToken = $HPToken.Token
+            useGalleryImage = $false
+            imageId = ""
+            imagePublisher = $imagePublisher
+            imageOffer = $imageOffer
+            imageSku = $imageSku
+            imageVersion = $imageVersionMarketplace
+        }
+    }
             return
         }
         
@@ -199,40 +314,22 @@ Function Replace-AvdHost {
         }
     }
 
-    # Build template parameters based on image type
-    $params = @{
-        vmName                = $hostName;
-        vmSize                = $VMSize;
-        adminUsername         = $adminUsername;
-        adminPassword         = $AdminVMPassword;
-        hostPoolName          = $HostPoolName;
-        resourceGroupName     = $avdRG;
-        location              = $VM.Location;
-        vnetName              = $VNetName;
-        subnetName            = $SubnetName;
-        registrationInfoToken = $HPToken.Token
-    }
-    
-    # Add image reference parameters based on image type
-    if ($isGalleryImage) {
-        $params.Add('imageId', $imageId)
-        $params.Add('useGalleryImage', $true)
-        Write-Output "Using Azure Compute Gallery image: $imageId"
-    } else {
-        $params.Add('imagePublisher', $imageReference.publisher)
-        $params.Add('imageOffer', $imageReference.offer)
-        $params.Add('imageSku', $imageReference.sku)
-        $params.Add('imageVersion', $imageReference.version)
-        $params.Add('useGalleryImage', $false)
-        Write-Output "Using marketplace image: $($imageReference.publisher):$($imageReference.offer):$($imageReference.sku):$($imageReference.version)"
-    }
     Write-Output "...Submitting Spec to rebuild VM ($TemplateSpecName $TemplateSpecVersion)"
-    New-AzResourceGroupDeployment `
-        -ResourceGroupName $avdRG `
-        -TemplateSpecId $TemplateSpecId `
-        -TemplateParameterObject $params `
-        -Name $TemplateSpecName `
-        -Verbose
+    try {
+        $deployment = New-AzResourceGroupDeployment `
+            -ResourceGroupName $avdRG `
+            -TemplateSpecId $TemplateSpecId `
+            -TemplateParameterObject $templateParams `
+            -Name "$TemplateSpecName-$(Get-Date -Format 'yyyyMMdd-HHmmss')" `
+            -Verbose `
+            -ErrorAction Stop
+        
+        Write-Output "Template deployment completed successfully. Deployment name: $($deployment.DeploymentName)"
+    }
+    catch {
+        Write-Error "Template deployment failed: $($_.Exception.Message)"
+        throw
+    }
 }
 
 ####   MAIN SCRIPT   ####
@@ -269,19 +366,65 @@ Foreach ($Sessionhost in $SessionHosts) {
 
         # Remove VM including host pool registration
         Write-Output "...Getting Admin Passwords from Keyvault"
-        $AdminVMPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultVMAdmin -AsPlainText
+        try {
+            $AdminVMPassword = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultVMAdmin -AsPlainText -ErrorAction Stop
+        }
+        catch {
+            Write-Error "Failed to retrieve admin password from Key Vault: $($_.Exception.Message)"
+            Write-Output "Key Vault: $KeyVaultName, Secret: $KeyVaultVMAdmin"
+            continue
+        }
+        
         Write-Output "...Getting VM information"
-        $VM = Get-azVM -Name $hostShortName
+        try {
+            $VM = Get-AzVM -Name $hostShortName -ErrorAction Stop
+            if (-not $VM) {
+                Write-Error "VM not found: $hostShortName"
+                continue
+            }
+        }
+        catch {
+            Write-Error "Failed to retrieve VM information for: $hostShortName. Error: $($_.Exception.Message)"
+            continue
+        }
+        
         $adminUsername = $VM.OsProfile.AdminUsername
         Write-Output "...Getting Template Spec ID"
-        $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion).Versions.Id
+        try {
+            $TemplateSpecId = (Get-AzTemplateSpec -Name $TemplateSpecName -ResourceGroupName $TemplateSpecRG -Version $TemplateSpecVersion -ErrorAction Stop).Versions.Id
+        }
+        catch {
+            Write-Error "Failed to retrieve Template Spec: $TemplateSpecName. Error: $($_.Exception.Message)"
+            continue
+        }
+        
         $VMSize = $VM.HardwareProfile.VmSize
-        $nicId = $VM.NetworkProfile.NetworkInterfaces[0].Id
-        $nic = Get-AzNetworkInterface -ResourceId $nicId
-        $vnetId = ($nic.IpConfigurations[0].Subnet.Id -split '/subnets/')[0]
-        $vnet = Get-AzResource -ResourceId $vnetId
-        $VNetName = $vnet.Name
-        $SubnetName = $nic.IpConfigurations[0].Subnet.Id.Split('/')[-1]
+        
+        # Safely extract network information with null checks
+        if ($VM.NetworkProfile -and $VM.NetworkProfile.NetworkInterfaces -and $VM.NetworkProfile.NetworkInterfaces.Count -gt 0) {
+            $nicId = $VM.NetworkProfile.NetworkInterfaces[0].Id
+            try {
+                $nic = Get-AzNetworkInterface -ResourceId $nicId -ErrorAction Stop
+                if ($nic.IpConfigurations -and $nic.IpConfigurations.Count -gt 0 -and $nic.IpConfigurations[0].Subnet) {
+                    $vnetId = ($nic.IpConfigurations[0].Subnet.Id -split '/subnets/')[0]
+                    $vnet = Get-AzResource -ResourceId $vnetId -ErrorAction Stop
+                    $VNetName = $vnet.Name
+                    $SubnetName = $nic.IpConfigurations[0].Subnet.Id.Split('/')[-1]
+                }
+                else {
+                    Write-Error "Unable to extract subnet information from NIC: $nicId"
+                    continue
+                }
+            }
+            catch {
+                Write-Error "Failed to retrieve network interface information: $($_.Exception.Message)"
+                continue
+            }
+        }
+        else {
+            Write-Error "VM does not have network interfaces configured: $hostShortName"
+            continue
+        }
 
         Replace-AvdHost -HostPoolName $HostPoolName -avdRG $avdRG -VM $VM -TemplateSpecId $TemplateSpecId -AdminVMPassword $AdminVMPassword -index $index -hostName $hostName -VMSize $VMSize -VNetName $VNetName -SubnetName $SubnetName -adminUsername $adminUsername -imageId $imageId
     }
