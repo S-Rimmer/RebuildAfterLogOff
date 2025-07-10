@@ -2,17 +2,7 @@
 This script is designed to rebuild a Personal VM after a user has logged off and/or no previous sessions have been noted in the past 
 $ifNotUsedInHrs value. This prevents rebuild of VMs that have been manually assigned but not used. The scenarios where this will help
 are:
-1. Sensitive data         }
-        
-        # For marketplace images, verify the image exists
-        try {
-            $marketplaceImage = Get-AzVMImage -Location $VM.Location -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Version $imageVersionMarketplace -ErrorAction Stop
-            Write-Output "Marketplace image verified: $($marketplaceImage.Id)"
-        } catch {
-            Write-Error "Marketplace image not found: $imagePublisher:$imageOffer:$imageSku:$imageVersionMarketplace. Error: $($_.Exception.Message)"
-            return
-        }
-    } behind and need to ensure VM is rebuilt but will be unassigned or auto assigned when complete
+1. Sensitive data left behind and need to ensure VM is rebuilt but will be unassigned or auto assigned when complete
 2. Personal Host Pool with FSLogix for Profiles and to save cost only have subset of VMs for active users and not all all users in the 
    organization with possibly many powered down or not in use.
 
@@ -177,11 +167,11 @@ Function Replace-AvdHost {
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (2hrs)"
     $HPToken = Get-AzWvdHostPoolRegistrationToken -HostPoolName $HostPoolName -ResourceGroupName $avdRG
-    If ($HPToken.Token -eq $null) {
+    If ($null -eq $HPToken.Token) {
         $ExpirationTime = $((Get-Date).ToUniversalTime().AddHours(2).ToString('yyyy-MM-ddTHH:mm:ss.fffffffZ'))
         $HPToken = New-AzWvdRegistrationInfo -ResourceGroupName $avdRG -HostPoolName $HostPoolName -ExpirationTime $ExpirationTime
     }
-    $HPTokenSecure = ConvertTo-SecureString $HPToken.Token -AsPlainText -Force
+    # Token is now available for template deployment
 
     # Determine if this is an Azure Compute Gallery image or marketplace image
     $isGalleryImage = $imageId -match "^/subscriptions/.*/resourceGroups/.*/providers/Microsoft\.Compute/galleries/.*/images/.*"
@@ -292,25 +282,14 @@ Function Replace-AvdHost {
             imageSku = $imageSku
             imageVersion = $imageVersionMarketplace
         }
-    }
-            return
-        }
         
         # Verify marketplace image exists
         try {
-            $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location -Version $imageVersion -ErrorAction Stop
+            $image = Get-AzVMImage -PublisherName $imagePublisher -Offer $imageOffer -Skus $imageSku -Location $VM.Location -Version $imageVersionMarketplace -ErrorAction Stop
             Write-Output "Marketplace image verified: $($image.Id)"
         } catch {
-            Write-Error "Marketplace image not found: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku, Version: $imageVersion"
+            Write-Error "Marketplace image not found: Publisher: $imagePublisher, Offer: $imageOffer, Sku: $imageSku, Version: $imageVersionMarketplace"
             return
-        }
-        
-        # For marketplace images, we use the traditional structure
-        $imageReference = @{
-            publisher = $imagePublisher
-            offer = $imageOffer
-            sku = $imageSku
-            version = $imageVersion
         }
     }
 
@@ -334,7 +313,7 @@ Function Replace-AvdHost {
 
 ####   MAIN SCRIPT   ####
 Write-Output "Getting AVD Session Hosts where user is assigned..."
-$SessionHosts = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG | where AssignedUser -ne $null
+$SessionHosts = Get-AzWvdSessionHost -HostPoolName $HostPoolName -ResourceGroupName $avdRG | Where-Object AssignedUser -ne $null
 
 Foreach ($Sessionhost in $SessionHosts) {
     $assignedUser = $SessionHost.AssignedUser
@@ -355,8 +334,8 @@ Foreach ($Sessionhost in $SessionHosts) {
     |where UserName == "' + $assignedUser + '"
     |sort by TimeGenerated asc, CorrelationId'
     
-    $PrevSessions = Invoke-AzOperationalInsightsQuery -WorkspaceId $WorkspaceId -Query $Query | select -ExpandProperty Results
-    If ($PrevSessions -ne $null) { $PrevSessionTime = [datetime]$PrevSessions[-1].TimeGenerated; $PrevUsed = $true }
+    $PrevSessions = Invoke-AzOperationalInsightsQuery -WorkspaceId $WorkspaceId -Query $Query | Select-Object -ExpandProperty Results
+    If ($null -ne $PrevSessions) { $PrevSessionTime = [datetime]$PrevSessions[-1].TimeGenerated; $PrevUsed = $true }
     else { $PrevSessionTime = "No logons found in Log Analytics in past $IfNotUsedInHrs hrs (Logging can be delayd!)"; $PrevUsed = $false }
     Write-Output "...Last Logon: $PrevSessionTime"
 
@@ -432,4 +411,4 @@ Foreach ($Sessionhost in $SessionHosts) {
         Write-Output "...No Action Required"
     }
 }
-If ($SessionHosts -eq $null) { Write-Output "No Session Hosts found with assigned users." }
+If ($null -eq $SessionHosts) { Write-Output "No Session Hosts found with assigned users." }
