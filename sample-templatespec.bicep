@@ -246,7 +246,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
     typeHandlerVersion: '2.73'
     autoUpgradeMinorVersion: true
     settings: {
-      modulesUrl: 'https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_3-10-2021.zip'
+      modulesUrl: 'https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_09-08-2022.zip'
       configurationFunction: 'Configuration.ps1\\AddSessionHost'
       properties: {
         hostPoolName: hostPoolName
