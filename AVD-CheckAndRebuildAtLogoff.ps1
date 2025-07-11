@@ -270,6 +270,11 @@ Function Replace-AvdHost {
             enableSecureBoot = $true
             enableVtpm = $true
             enableAzureADJoin = $enableAzureADJoin
+            # Domain join parameters - explicitly set to empty for Azure AD join
+            domainToJoin = ""
+            ouPath = ""
+            domainUsername = ""
+            domainPassword = ""
         }
     } 
     else {
@@ -317,6 +322,11 @@ Function Replace-AvdHost {
             enableSecureBoot = $true
             enableVtpm = $true
             enableAzureADJoin = $enableAzureADJoin
+            # Domain join parameters - explicitly set to empty for Azure AD join
+            domainToJoin = ""
+            ouPath = ""
+            domainUsername = ""
+            domainPassword = ""
         }
         
         # Verify marketplace image exists

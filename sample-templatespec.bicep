@@ -103,7 +103,7 @@ var computerName = vmName
 // ⚠️ IMPORTANT: Update the resourceGroupName below to match your VNet's resource group
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
-  scope: resourceGroup('rg-network') // TODO: Change 'rg-network' to your VNet's resource group name
+  scope: resourceGroup('EST2_SharedResources') // TODO: Change 'rg-network' to your VNet's resource group name
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
@@ -251,8 +251,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
       properties: {
         hostPoolName: hostPoolName
         registrationInfoToken: registrationInfoToken
-        aadJoin: empty(domainToJoin) ? true : false
-        UseAgentDownloadEndpoint: true
+        aadJoin: empty(domainToJoin) && enableAzureADJoin ? true : false
       }
     }
   }

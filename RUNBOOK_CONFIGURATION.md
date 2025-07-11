@@ -109,12 +109,19 @@ If using a schedule:
 
 ## Troubleshooting
 
+### AVD Health Check Errors (DomainJoinedCheck/DomainTrustCheck)
+1. **Update Template Spec** to fix aadJoin logic to respect enableAzureADJoin parameter
+2. Deploy Template Spec version 1.3 or higher with the logic fix
+3. Ensure enableAzureADJoin parameter matches your deployment intent
+4. See `FIX_AVD_HEALTH_CHECK_ERROR.md` for detailed explanation
+
 ### DSC Extension Errors (Deprecated Parameters)
 1. **Update Template Spec** to remove deprecated parameters:
    - Remove `mdmId` parameter
    - Remove `sessionHostConfigurationLastUpdateTime` parameter  
    - Remove `aadJoinPreview` parameter
-2. Deploy updated Template Spec version (recommend version 1.1 or higher)
+   - Remove `UseAgentDownloadEndpoint` parameter
+2. Deploy updated Template Spec version (recommend version 1.3 or higher)
 3. Update runbook to reference new Template Spec version
 4. See `FIX_DSC_EXTENSION_ERROR.md` for detailed steps
 

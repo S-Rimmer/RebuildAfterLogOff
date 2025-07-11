@@ -13,6 +13,7 @@ The following parameters have been **deprecated** in newer versions of Azure VM 
 - `mdmId` - Mobile Device Management ID (no longer used)
 - `sessionHostConfigurationLastUpdateTime` - Session configuration timestamp (replaced by other mechanisms)
 - `aadJoinPreview` - Azure AD join preview flag (functionality now built-in)
+- `UseAgentDownloadEndpoint` - Agent download endpoint flag (no longer supported)
 
 **AADLoginForWindows Extension:**
 - `mdmId` - Mobile Device Management ID (no longer required)
@@ -31,7 +32,7 @@ settings: {
     hostPoolName: hostPoolName
     registrationInfoToken: registrationInfoToken
     aadJoin: empty(domainToJoin) ? true : false
-    UseAgentDownloadEndpoint: true
+    UseAgentDownloadEndpoint: true          // ❌ DEPRECATED - Causes error
     aadJoinPreview: false                    // ❌ DEPRECATED - Causes error
     mdmId: ''                              // ❌ DEPRECATED - Causes error
     sessionHostConfigurationLastUpdateTime: ''  // ❌ DEPRECATED - Causes error
@@ -55,8 +56,11 @@ settings: {
     hostPoolName: hostPoolName
     registrationInfoToken: registrationInfoToken
     aadJoin: empty(domainToJoin) ? true : false
-    UseAgentDownloadEndpoint: true
-    // All deprecated parameters removed
+    // All deprecated parameters removed:
+    // ❌ UseAgentDownloadEndpoint (removed)
+    // ❌ aadJoinPreview (removed)
+    // ❌ mdmId (removed)
+    // ❌ sessionHostConfigurationLastUpdateTime (removed)
   }
 }
 ```
@@ -74,15 +78,15 @@ The AVD Agent DSC extension now supports these parameters:
 | `hostPoolName` | String | Yes | Name of the AVD host pool |
 | `registrationInfoToken` | String | Yes | Host pool registration token |
 | `aadJoin` | Boolean | No | Whether to perform Azure AD join (default: false) |
-| `UseAgentDownloadEndpoint` | Boolean | No | Use Microsoft endpoint for agent download |
 
 ## What Changed
 Microsoft updated Azure VM extensions to:
 1. **Remove MDM (Mobile Device Management) parameters** - No longer used in modern Azure AD scenarios
 2. **Remove session host configuration parameters** - Managed through Azure Virtual Desktop service directly  
 3. **Remove preview parameters** - Preview functionality is now built into the core extension
-4. **Simplify AAD extension configuration** - AADLoginForWindows extension works without settings
-5. **Improve reliability** - Fewer parameters reduce configuration errors and compatibility issues
+4. **Remove agent download endpoint parameters** - Agent download is handled automatically
+5. **Simplify AAD extension configuration** - AADLoginForWindows extension works without settings
+6. **Improve reliability** - Fewer parameters reduce configuration errors and compatibility issues
 
 ## Impact of This Fix
 - ✅ **VMs will deploy successfully** without DSC extension errors
