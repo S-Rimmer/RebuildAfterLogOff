@@ -7,7 +7,7 @@ are:
    organization with possibly many powered down or not in use.
 
 PARAMETERS:
-- enableAzureADJoin: Set to $false to disable Azure AD Join extension if experiencing connectivity issues (default: $false)
+- enableAzureADJoin: Set to $false to disable Azure AD Join extension if experiencing connectivity issues (default: $true)
   Azure AD Join requires network connectivity to Azure AD endpoints. If experiencing errors like 0x801c002d, 
   disable this feature and troubleshoot network connectivity separately.
 
@@ -40,7 +40,7 @@ param(
     [Parameter(Mandatory)]
     [string]$imageId,
     [Parameter(Mandatory = $false)]
-    [bool]$enableAzureADJoin = $false
+    [bool]$enableAzureADJoin = $true
 )
 
 Connect-AzAccount -Identity -Environment $CloudEnvironment -Subscription $SubscriptionId | Out-Null
