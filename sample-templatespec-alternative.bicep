@@ -1,22 +1,6 @@
 /*
-Sample Template Spec for AVD VM deployment supporting both Azure Compute Gallery and Marketplace images
-
-DEPLOYMENT METHODS:
-- Azure CLI/PowerShell: Use this Bicep file
-- Azure Portal: Use sample-templatespec.json instead (ARM JSON format required)
-
-BEFORE DEPLOYING AS TEMPLATE SPEC:
-1. Update the VNet resource group name on line 80 (scope: resourceGroup('rg-network'))
-2. Configure domain join parameters if needed (all optional for Azure AD join)
-3. Test the template with your parameters before creating the Template Spec
-4. Deploy as Template Spec using Azure CLI, PowerShell, or Portal (see README.md)
-
-This template automatically handles:
-✅ Azure Compute Gallery images with imageId parameter
-✅ Marketplace images with publisher/offer/sku/version parameters  
-✅ Conditional domain join (Azure AD join if no domain specified)
-✅ Proper resource cleanup with deleteOption settings
-✅ AVD agent installation and host pool registration
+Alternative Template Spec for AVD VM deployment - Custom Script Extension Approach
+This version uses CustomScriptExtension instead of DSC to avoid domain health check issues
 */
 
 @description('Name of the virtual machine')
@@ -100,10 +84,9 @@ var nicName = '${vmName}-nic'
 var computerName = vmName
 
 // Get existing virtual network and subnet
-// ⚠️ IMPORTANT: Update the resourceGroupName below to match your VNet's resource group
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
-  scope: resourceGroup('EST2_SharedResources') // TODO: Change 'rg-network' to your VNet's resource group name
+  scope: resourceGroup('EST2_SharedResources')
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
@@ -149,10 +132,8 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
     storageProfile: {
       imageReference: useGalleryImage ? {
-        // Azure Compute Gallery image reference
         id: imageId
       } : {
-        // Marketplace image reference
         publisher: imagePublisher
         offer: imageOffer
         sku: imageSku
@@ -165,7 +146,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
         managedDisk: {
           storageAccountType: 'Premium_LRS'
         }
-        deleteOption: 'Delete' // Ensures disk is deleted when VM is deleted
+        deleteOption: 'Delete'
       }
     }
     networkProfile: {
@@ -173,14 +154,14 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
         {
           id: networkInterface.id
           properties: {
-            deleteOption: 'Delete' // Ensures NIC is deleted when VM is deleted
+            deleteOption: 'Delete'
           }
         }
       ]
     }
     diagnosticsProfile: {
       bootDiagnostics: {
-        enabled: true // Enables boot diagnostics for troubleshooting
+        enabled: true
       }
     }
     securityProfile: securityType == 'TrustedLaunch' ? {
@@ -227,39 +208,30 @@ resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-
     type: 'AADLoginForWindows'
     typeHandlerVersion: '1.0'
     autoUpgradeMinorVersion: true
-    // No settings required - extension works without configuration
   }
 }
 
-// Install AVD agent and register with host pool
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
+// Install AVD agent using CustomScriptExtension (alternative to DSC)
+resource avdAgentInstallation 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
   parent: virtualMachine
-  name: 'AVDAgent'
+  name: 'AVDAgentInstall'
   location: location
   dependsOn: [
-    domainJoinExtension // Ensure domain join completes first (if enabled)
-    aadJoinExtension    // Ensure Azure AD join completes first (if enabled)
+    domainJoinExtension
+    aadJoinExtension
   ]
   properties: {
-    publisher: 'Microsoft.PowerShell'
-    type: 'DSC'
-    typeHandlerVersion: '2.73'
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-      modulesUrl: 'https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_09-08-2022.zip'
-      configurationFunction: 'Configuration.ps1\\AddSessionHost'
-      properties: {
-        hostPoolName: hostPoolName
-        registrationInfoToken: registrationInfoToken
-        aadJoin: empty(domainToJoin) && enableAzureADJoin ? true : false
-        // Explicitly disable domain health checks for Azure AD environments
-        domainJoined: empty(domainToJoin) ? false : true
-      }
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -Command "& { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $isAADJoined = ${empty(domainToJoin) && enableAzureADJoin ? 'true' : 'false'}; $hostPoolName = \'${hostPoolName}\'; $registrationToken = \'${registrationInfoToken}\'; Invoke-WebRequest -Uri \'https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrmXv\' -OutFile \'C:\\AVDAgent.msi\' -UseBasicParsing; Start-Process -FilePath \'msiexec.exe\' -ArgumentList \'/i C:\\AVDAgent.msi /quiet /qn /norestart /passive\' -Wait; Invoke-WebRequest -Uri \'https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrxrH\' -OutFile \'C:\\AVDBootLoader.msi\' -UseBasicParsing; Start-Process -FilePath \'msiexec.exe\' -ArgumentList \'/i C:\\AVDBootLoader.msi /quiet /qn /norestart /passive\' -Wait; $regKey = \'HKLM:\\SOFTWARE\\Microsoft\\RDInfraAgent\'; if(!(Test-Path $regKey)) { New-Item -Path $regKey -Force }; Set-ItemProperty -Path $regKey -Name \'RegistrationToken\' -Value $registrationToken; Set-ItemProperty -Path $regKey -Name \'IsRegistered\' -Value 0; if($isAADJoined -eq \'true\') { Set-ItemProperty -Path $regKey -Name \'UseAADJoin\' -Value 1 }; Start-Process -FilePath \'C:\\Program Files\\Microsoft RDInfra\\AgentInstall.exe\' -ArgumentList \'/S\' -Wait; Restart-Service -Name \'RDAgentBootLoader\' -Force; }"'
     }
   }
 }
 
-// Outputs for verification and reference
+// Outputs
 output vmResourceId string = virtualMachine.id
 output vmName string = virtualMachine.name
 output nicResourceId string = networkInterface.id
