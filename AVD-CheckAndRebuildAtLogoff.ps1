@@ -179,36 +179,48 @@ Function Replace-AvdHost {
     
     # Clean up Azure AD device registration to prevent hostname conflicts
     Write-Output "...Cleaning up Azure AD device registration"
+    $maxDeviceDeleteAttempts = 3
+    $deviceDeleteDelaySeconds = 30
+    $deviceDeleted = $false
     try {
         # Get the short name for Azure AD device lookup
         $deviceName = ($hostName -split "\.")[0]  # Get short name without FQDN
-        
-        # Try to find and remove the Azure AD device
         $accessToken = (Get-AzAccessToken).Token
         $headers = @{
-            'Authorization' = "Bearer $accessToken"
+            Authorization = "Bearer $accessToken"
             'Content-Type' = 'application/json'
         }
-        
-        # Get devices with matching display name
-        $devicesUri = "https://graph.microsoft.com/v1.0/devices?`$filter=displayName eq '$deviceName'"
-        $devices = Invoke-RestMethod -Uri $devicesUri -Headers $headers -Method Get -ErrorAction SilentlyContinue
-        
-        if ($devices.value -and $devices.value.Count -gt 0) {
-            foreach ($device in $devices.value) {
-                Write-Output "...Found Azure AD device: $($device.displayName) (ID: $($device.id))"
-                $deleteUri = "https://graph.microsoft.com/v1.0/devices/$($device.id)"
-                try {
-                    Invoke-RestMethod -Uri $deleteUri -Headers $headers -Method Delete -ErrorAction Stop
-                    Write-Output "...Successfully removed Azure AD device: $($device.displayName)"
+        for ($attempt = 1; $attempt -le $maxDeviceDeleteAttempts; $attempt++) {
+            Write-Output "...Device cleanup attempt $attempt for: $deviceName"
+            $devicesUri = "https://graph.microsoft.com/v1.0/devices?`$filter=displayName eq '$deviceName'"
+            $devices = Invoke-RestMethod -Uri $devicesUri -Headers $headers -Method Get -ErrorAction SilentlyContinue
+            if ($devices.value -and $devices.value.Count -gt 0) {
+                foreach ($device in $devices.value) {
+                    Write-Output "...Found Azure AD device: $($device.displayName) (ID: $($device.id))"
+                    $deleteUri = "https://graph.microsoft.com/v1.0/devices/$($device.id)"
+                    try {
+                        Invoke-RestMethod -Uri $deleteUri -Headers $headers -Method Delete -ErrorAction Stop
+                        Write-Output "...Successfully removed Azure AD device: $($device.displayName)"
+                    }
+                    catch {
+                        Write-Output "...Warning: Could not remove Azure AD device $($device.displayName): $($_.Exception.Message)"
+                    }
                 }
-                catch {
-                    Write-Output "...Warning: Could not remove Azure AD device $($device.displayName): $($_.Exception.Message)"
-                }
+                # Wait for deletion to propagate
+                Write-Output "...Waiting $deviceDeleteDelaySeconds seconds for Azure AD device deletion to propagate..."
+                Start-Sleep -Seconds $deviceDeleteDelaySeconds
+            } else {
+                Write-Output "...No Azure AD device found with name: $deviceName (after $attempt attempt(s))"
+                $deviceDeleted = $true
+                break
             }
         }
-        else {
-            Write-Output "...No Azure AD device found with name: $deviceName"
+        # Final check: confirm device is deleted
+        $devices = Invoke-RestMethod -Uri $devicesUri -Headers $headers -Method Get -ErrorAction SilentlyContinue
+        if ($devices.value -and $devices.value.Count -gt 0) {
+            Write-Output "...Warning: Device $deviceName still exists in Azure AD after $maxDeviceDeleteAttempts attempts. Manual cleanup may be required."
+        } else {
+            Write-Output "...Confirmed: Device $deviceName is deleted from Azure AD."
         }
     }
     catch {
@@ -445,12 +457,14 @@ Foreach ($Sessionhost in $SessionHosts) {
     Write-Output "...Session Status:" $session.SessionState
 
     # Ensure user has logged in at least once in last X hours
-    $Query = 'WVDConnections
-    |where TimeGenerated > ago(' + $IfNotUsedInHrs + 'h)
-    |where SessionHostName == "' + $hostName + '"
-    |where State == "Completed"
-    |where UserName == "' + $assignedUser + '"
-    |sort by TimeGenerated asc, CorrelationId'
+    $Query = @"
+WVDConnections
+| where TimeGenerated > ago(${IfNotUsedInHrs}h)
+| where SessionHostName == "$hostName"
+| where State == "Completed"
+| where UserName == "$assignedUser"
+| sort by TimeGenerated asc, CorrelationId
+"@
     
     $PrevSessions = Invoke-AzOperationalInsightsQuery -WorkspaceId $WorkspaceId -Query $Query | Select-Object -ExpandProperty Results
     If ($null -ne $PrevSessions) { 
