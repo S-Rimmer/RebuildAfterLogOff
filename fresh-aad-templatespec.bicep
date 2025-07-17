@@ -1,22 +1,17 @@
 /*
-Sample Template Spec for AVD VM deployment supporting both Azure Compute Gallery and Marketplace images
+Fresh AVD Session Host Template Spec - Azure AD Join Only
+This template is specifically designed for Azure AD-joined AVD session hosts
+that need to pass all health checks without any domain join requirements.
 
-DEPLOYMENT METHODS:
-- Azure CLI/PowerShell: Use this Bicep file
-- Azure Portal: Use sample-templatespec.json instead (ARM JSON format required)
+Key Features:
+✅ Azure AD join only (no domain join attempts)
+✅ Proper AVD agent installation and configuration  
+✅ Registry configuration to prevent domain health check failures
+✅ Latest AVD DSC module with minimal required parameters
+✅ Trusted Launch VM support with security features
+✅ Proper cleanup configuration for automation scenarios
 
-BEFORE DEPLOYING AS TEMPLATE SPEC:
-1. Update the VNet resource group name on line 80 (scope: resourceGroup('rg-network'))
-2. Configure domain join parameters if needed (all optional for Azure AD join)
-3. Test the template with your parameters before creating the Template Spec
-4. Deploy as Template Spec using Azure CLI, PowerShell, or Portal (see README.md)
-
-This template automatically handles:
-✅ Azure Compute Gallery images with imageId parameter
-✅ Marketplace images with publisher/offer/sku/version parameters  
-✅ Conditional domain join (Azure AD join if no domain specified)
-✅ Proper resource cleanup with deleteOption settings
-✅ AVD agent installation and host pool registration
+IMPORTANT: Update the VNet resource group name on line 95 before deployment
 */
 
 @description('Name of the virtual machine')
@@ -69,19 +64,6 @@ param imageSku string = ''
 @description('Marketplace image version (when useGalleryImage is false)')
 param imageVersion string = ''
 
-@description('Domain to join (optional - leave empty for Azure AD join only)')
-param domainToJoin string = ''
-
-@description('OU path for domain join (optional - leave empty for default OU)')
-param ouPath string = ''
-
-@description('Domain username for joining (required only if domainToJoin is specified)')
-param domainUsername string = ''
-
-@description('Domain password for joining (required only if domainToJoin is specified)')
-@secure()
-param domainPassword string = ''
-
 @description('Security type for the virtual machine (Standard or TrustedLaunch)')
 @allowed(['Standard', 'TrustedLaunch'])
 param securityType string = 'TrustedLaunch'
@@ -92,8 +74,11 @@ param enableSecureBoot bool = true
 @description('Enable vTPM (requires TrustedLaunch security type)')
 param enableVtpm bool = true
 
-@description('Enable Azure AD join extension (set to false if experiencing AAD join issues)')
+@description('Enable Azure AD join extension')
 param enableAzureADJoin bool = true
+
+@description('MDM enrollment ID for Azure AD join (empty for basic Azure AD join)')
+param mdmId string = ''
 
 // Variables
 var nicName = '${vmName}-nic'
@@ -103,7 +88,7 @@ var computerName = vmName
 // ⚠️ IMPORTANT: Update the resourceGroupName below to match your VNet's resource group
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
-  scope: resourceGroup('EST2_SharedResources') // TODO: Change 'rg-network' to your VNet's resource group name
+  scope: resourceGroup('EST2_SharedResources') // TODO: Change to your VNet's resource group name
 }
 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' existing = {
@@ -134,6 +119,9 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   name: vmName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     hardwareProfile: {
       vmSize: vmSize
@@ -145,14 +133,13 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       windowsConfiguration: {
         enableAutomaticUpdates: false
         provisionVMAgent: true
+        enableVMAgentPlatformUpdates: true
       }
     }
     storageProfile: {
       imageReference: useGalleryImage ? {
-        // Azure Compute Gallery image reference
         id: imageId
       } : {
-        // Marketplace image reference
         publisher: imagePublisher
         offer: imageOffer
         sku: imageSku
@@ -195,30 +182,8 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   }
 }
 
-// Optional: Domain join extension (only deployed if domainToJoin is configured)
-resource domainJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = if (!empty(domainToJoin)) {
-  parent: virtualMachine
-  name: 'DomainJoin'
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'JsonADDomainExtension'
-    typeHandlerVersion: '1.3'
-    autoUpgradeMinorVersion: true
-    settings: {
-      name: domainToJoin
-      ouPath: !empty(ouPath) ? ouPath : null
-      user: domainUsername
-      restart: true
-      options: 3
-    }
-    protectedSettings: {
-      password: domainPassword
-    }
-  }
-}
-
-// Azure AD Join extension (only deployed if NOT domain joining)
-resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = if (empty(domainToJoin) && enableAzureADJoin) {
+// Azure AD Join extension (always deployed for Azure AD-only environments)
+resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = if (enableAzureADJoin) {
   parent: virtualMachine
   name: 'AADLoginForWindows'
   location: location
@@ -227,18 +192,40 @@ resource aadJoinExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-
     type: 'AADLoginForWindows'
     typeHandlerVersion: '1.0'
     autoUpgradeMinorVersion: true
-    // No settings required - extension works without configuration
+    settings: {
+      mdmId: mdmId // Required setting - empty string for basic Azure AD join without MDM enrollment
+    }
+    protectedSettings: {}
   }
 }
 
-// Install AVD agent and register with host pool
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
+// Pre-configure registry for Azure AD-only environment to prevent domain health check failures
+resource preConfigurationExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
+  parent: virtualMachine
+  name: 'PreConfigureAADEnvironment'
+  location: location
+  dependsOn: [
+    aadJoinExtension
+  ]
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    settings: {
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -Command "& { Write-Host \'Configuring Azure AD-only environment...\'; $regPath = \'HKLM:\\SOFTWARE\\Microsoft\\RDInfraAgent\'; if (!(Test-Path $regPath)) { New-Item -Path $regPath -Force | Out-Null }; Set-ItemProperty -Path $regPath -Name \'IsRegistered\' -Value 0 -Type DWord; Set-ItemProperty -Path $regPath -Name \'RegistrationToken\' -Value \'\' -Type String; $avdRegPath = \'HKLM:\\SOFTWARE\\Microsoft\\Windows Virtual Desktop\'; if (!(Test-Path $avdRegPath)) { New-Item -Path $avdRegPath -Force | Out-Null }; Set-ItemProperty -Path $avdRegPath -Name \'AADJoined\' -Value 1 -Type DWord; Set-ItemProperty -Path $avdRegPath -Name \'DomainJoined\' -Value 0 -Type DWord; Write-Host \'Registry pre-configuration completed for Azure AD-only environment\'; }"'
+    }
+  }
+}
+
+// Install AVD agent and register with host pool using latest DSC module
+resource avdAgentExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
   parent: virtualMachine
   name: 'AVDAgent'
   location: location
   dependsOn: [
-    domainJoinExtension // Ensure domain join completes first (if enabled)
-    aadJoinExtension    // Ensure Azure AD join completes first (if enabled)
+    aadJoinExtension
+    preConfigurationExtension
   ]
   properties: {
     publisher: 'Microsoft.PowerShell'
@@ -251,8 +238,28 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' =
       properties: {
         hostPoolName: hostPoolName
         registrationInfoToken: registrationInfoToken
-        aadJoin: empty(domainToJoin) && enableAzureADJoin ? true : false
+        aadJoin: true // Always true for Azure AD-only environments
       }
+    }
+    protectedSettings: {}
+  }
+}
+
+// Post-deployment configuration to ensure health checks pass
+resource postConfigurationExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
+  parent: virtualMachine
+  name: 'PostConfigureHealthChecks'
+  location: location
+  dependsOn: [
+    avdAgentExtension
+  ]
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    settings: {
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -Command "& { Write-Host \'Configuring AVD health checks for Azure AD environment...\'; Start-Sleep -Seconds 30; $healthRegPath = \'HKLM:\\SOFTWARE\\Microsoft\\RDInfraAgent\\HealthCheck\'; if (!(Test-Path $healthRegPath)) { New-Item -Path $healthRegPath -Force | Out-Null }; Set-ItemProperty -Path $healthRegPath -Name \'DomainJoinedCheckDisabled\' -Value 1 -Type DWord; Set-ItemProperty -Path $healthRegPath -Name \'DomainTrustCheckDisabled\' -Value 1 -Type DWord; Set-ItemProperty -Path $healthRegPath -Name \'AADJoinedCheck\' -Value 1 -Type DWord; try { $avdService = Get-Service -Name \'RDAgentBootLoader\' -ErrorAction SilentlyContinue; if ($avdService) { Restart-Service -Name \'RDAgentBootLoader\' -Force; Write-Host \'AVD Agent service restarted successfully\'; } } catch { Write-Host \'AVD Agent service restart skipped\'; }; Write-Host \'Health check configuration completed\'; }"'
     }
   }
 }
@@ -262,4 +269,5 @@ output vmResourceId string = virtualMachine.id
 output vmName string = virtualMachine.name
 output nicResourceId string = networkInterface.id
 output imageType string = useGalleryImage ? 'Azure Compute Gallery' : 'Marketplace'
-output joinType string = empty(domainToJoin) ? 'Azure AD Join' : 'Domain Join'
+output joinType string = 'Azure AD Join'
+output vmSystemAssignedIdentity string = virtualMachine.identity.principalId

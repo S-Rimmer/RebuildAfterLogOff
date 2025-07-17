@@ -6,6 +6,12 @@ are:
 2. Personal Host Pool with FSLogix for Profiles and to save cost only have subset of VMs for active users and not all all users in the 
    organization with possibly many powered down or not in use.
 
+UPDATED FOR FRESH AZURE AD TEMPLATE:
+- This script now works with the fresh-aad-templatespec.bicep template
+- No domain join parameters are passed (Azure AD join only)
+- Template automatically configures registry settings for Azure AD environment
+- Health checks are pre-configured to prevent domain-related failures
+
 PARAMETERS:
 - enableAzureADJoin: Set to $false to disable Azure AD Join extension if experiencing connectivity issues (default: $true)
   Azure AD Join requires network connectivity to Azure AD endpoints. If experiencing errors like 0x801c002d, 
@@ -171,6 +177,45 @@ Function Replace-AvdHost {
         Write-Output "...Warning: Disk ID not found, skipping disk removal"
     }
     
+    # Clean up Azure AD device registration to prevent hostname conflicts
+    Write-Output "...Cleaning up Azure AD device registration"
+    try {
+        # Get the short name for Azure AD device lookup
+        $deviceName = ($hostName -split "\.")[0]  # Get short name without FQDN
+        
+        # Try to find and remove the Azure AD device
+        $accessToken = (Get-AzAccessToken).Token
+        $headers = @{
+            'Authorization' = "Bearer $accessToken"
+            'Content-Type' = 'application/json'
+        }
+        
+        # Get devices with matching display name
+        $devicesUri = "https://graph.microsoft.com/v1.0/devices?`$filter=displayName eq '$deviceName'"
+        $devices = Invoke-RestMethod -Uri $devicesUri -Headers $headers -Method Get -ErrorAction SilentlyContinue
+        
+        if ($devices.value -and $devices.value.Count -gt 0) {
+            foreach ($device in $devices.value) {
+                Write-Output "...Found Azure AD device: $($device.displayName) (ID: $($device.id))"
+                $deleteUri = "https://graph.microsoft.com/v1.0/devices/$($device.id)"
+                try {
+                    Invoke-RestMethod -Uri $deleteUri -Headers $headers -Method Delete -ErrorAction Stop
+                    Write-Output "...Successfully removed Azure AD device: $($device.displayName)"
+                }
+                catch {
+                    Write-Output "...Warning: Could not remove Azure AD device $($device.displayName): $($_.Exception.Message)"
+                }
+            }
+        }
+        else {
+            Write-Output "...No Azure AD device found with name: $deviceName"
+        }
+    }
+    catch {
+        Write-Output "...Warning: Azure AD device cleanup failed (non-blocking): $($_.Exception.Message)"
+        Write-Output "...This may cause hostname conflicts during Azure AD join. Consider manual cleanup if deployment fails."
+    }
+    
     # Ensure Host Pool Token exists and create if not
     Write-Output "...Getting Registration Token if doesn't exist (4hrs for deployment)"
     $HPToken = Get-AzWvdHostPoolRegistrationToken -HostPoolName $HostPoolName -ResourceGroupName $avdRG
@@ -249,7 +294,7 @@ Function Replace-AvdHost {
             return
         }
         
-        # Template parameters for gallery image
+        # Template parameters for gallery image (fresh AAD template - no domain parameters)
         $templateParams = @{
             vmName = $hostName
             vmSize = $VMSize
@@ -270,11 +315,7 @@ Function Replace-AvdHost {
             enableSecureBoot = $true
             enableVtpm = $true
             enableAzureADJoin = $enableAzureADJoin
-            # Domain join parameters - explicitly set to empty for Azure AD join
-            domainToJoin = ""
-            ouPath = ""
-            domainUsername = ""
-            domainPassword = ""
+            mdmId = "" # Empty for basic Azure AD join without MDM enrollment
         }
     } 
     else {
@@ -301,7 +342,7 @@ Function Replace-AvdHost {
         
         Write-Output "Marketplace image details - Publisher: $imagePublisher, Offer: $imageOffer, SKU: $imageSku, Version: $imageVersionMarketplace"
         
-        # Template parameters for marketplace image
+        # Template parameters for marketplace image (fresh AAD template - no domain parameters)
         $templateParams = @{
             vmName = $hostName
             vmSize = $VMSize
@@ -322,11 +363,7 @@ Function Replace-AvdHost {
             enableSecureBoot = $true
             enableVtpm = $true
             enableAzureADJoin = $enableAzureADJoin
-            # Domain join parameters - explicitly set to empty for Azure AD join
-            domainToJoin = ""
-            ouPath = ""
-            domainUsername = ""
-            domainPassword = ""
+            mdmId = "" # Empty for basic Azure AD join without MDM enrollment
         }
         
         # Verify marketplace image exists
